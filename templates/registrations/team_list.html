@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teams</title>
+</head>
+<body>
+    <h1>Registered Teams</h1>
+
+    <a href="/registrations/create/">Register New Team</a>
+
+    <ul>
+        {% for team in teams %}
+            <li>
+                {{ team.name }} -
+                {{ team.tournament.name }} -
+                {{ team.captain_name }} -
+                {{ team.captain_email }}
+            </li>
+        {% empty %}
+            <li>No teams registered yet.</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% if tournament %}Edit{% else %}Create{% endif %} Tournament</title>
+</head>
+<body>
+    <h1>{% if tournament %}Edit{% else %}Create{% endif %} Tournament</h1>
+
+    {% if error %}
+        <p style="color: red;">{{ error }}</p>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">
+            {% if tournament %}Update{% else %}Save{% endif %} Tournament
+        </button>
+    </form>
+
+    <a href="{% url 'tournament_list' %}">Back</a>
+</body>
+</html>

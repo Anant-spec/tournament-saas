@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Organizations</title>
+</head>
+<body>
+    <h1>Organizations</h1>
+
+    <a href="/organizations/create/">Create New Organization</a>
+
+    <ul>
+        {% for organization in organizations %}
+            <li>
+                {{ organization.name }} - {{ organization.slug }}
+                <a href="/organizations/update/{{ organization.id }}/">Edit</a>
+                <a href="/organizations/delete/{{ organization.id }}/">Delete</a>
+            </li>
+        {% empty %}
+            <li>No organizations found.</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

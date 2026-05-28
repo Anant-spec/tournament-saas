@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tournaments</title>
+</head>
+<body>
+    <h1>Tournaments</h1>
+
+    <a href="{% url 'tournament_create' %}">Create New Tournament</a>
+
+    <ul>
+        {% for tournament in tournaments %}
+            <li>
+                <a href="{% url 'tournament_detail' tournament.id %}">
+                    {{ tournament.name }}
+                </a>
+                - {{ tournament.game_title }}
+                - {{ tournament.format_type }}
+                - {{ tournament.status }}
+                - UUID: {{ tournament.id }}
+
+                | <a href="{% url 'tournament_edit' tournament.id %}">Edit</a>
+                | <a href="{% url 'tournament_delete' tournament.id %}">Delete</a>
+            </li>
+        {% empty %}
+            <li>No tournaments found.</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

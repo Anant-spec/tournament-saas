@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ tournament.name }}</title>
+</head>
+<body>
+    <h1>{{ tournament.name }}</h1>
+
+    <p>Organization: {{ tournament.organization.name }}</p>
+    <p>Game: {{ tournament.game_title }}</p>
+    <p>Format: {{ tournament.get_format_type_display }}</p>
+    <p>Status: {{ tournament.get_status_display }}</p>
+
+    {% if tournament.champion %}
+        <p><strong>Champion:</strong> {{ tournament.champion.name }}</p>
+    {% endif %}
+
+    <p>Registration Open: {{ tournament.registration_open }}</p>
+    <p>Start Date: {{ tournament.start_date }}</p>
+    <p>ID: {{ tournament.id }}</p>
+
+    <p>
+        <a href="{% url 'tournament_edit' tournament.id %}">Edit</a>
+        |
+        <a href="{% url 'tournament_delete' tournament.id %}">Delete</a>
+        |
+        <a href="{% url 'tournament_list' %}">Back to List</a>
+    </p>
+
+    <p>
+        <a href="{% url 'generate_bracket' tournament.id %}">Generate Bracket</a>
+    </p>
+
+    <h2>Bracket</h2>
+
+    {% if rounds %}
+        {% for round_number, matches in rounds.items %}
+            <h3>Round {{ round_number }}</h3>
+            <ul>
+                {% for match in matches %}
+                    <li>
+                        Match {{ match.match_number }}:
+                        {{ match.team1|default:"TBD" }}
+                        vs
+                        {{ match.team2|default:"TBD" }}
+
+                        {% if match.winner %}
+                            - Winner: {{ match.winner }}
+                        {% elif match.team1 and match.team2 %}
+                            <form method="post" action="{% url 'report_match_result' match.id %}">
+                                {% csrf_token %}
+                                <label>
+                                    <input type="radio" name="winner" value="{{ match.team1.id }}" required>
+                                    {{ match.team1.name }}
+                                </label>
+
+                                <label>
+                                    <input type="radio" name="winner" value="{{ match.team2.id }}" required>
+                                    {{ match.team2.name }}
+                                </label>
+
+                                <button type="submit">Submit Result</button>
+                            </form>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endfor %}
+    {% else %}
+        <p>No bracket generated yet.</p>
+    {% endif %}
+</body>
+</html>

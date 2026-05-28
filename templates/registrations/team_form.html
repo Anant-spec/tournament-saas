@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Register Team</title>
+</head>
+<body>
+    <h1>Register Team</h1>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Register Team</button>
+    </form>
+
+    <a href="/registrations/">Back to Teams</a>
+</body>
+</html>

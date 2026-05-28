@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Organization</title>
+</head>
+<body>
+    <h1>Create Organization</h1>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Create</button>
+    </form>
+
+    <a href="/organizations/">Back to Organizations</a>
+</body>
+</html>
