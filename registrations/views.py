@@ -40,14 +40,32 @@ def team_create(request):
     )
 
     if form.is_valid():
+        tournament = form.cleaned_data["tournament"]
+
+        # CHECK 1 — registration open
+        if not tournament.registration_open:
+            messages.error(request, "Registration is closed for this tournament.")
+            return render(request, "registrations/team_form.html", {"form": form})
+
+        # CHECK 2 — max teams not exceeded
+        approved_count = Registration.objects.filter(
+            tournament=tournament,
+            status="approved"
+        ).count()
+
+        if approved_count >= tournament.max_teams:
+            messages.error(request, f"This tournament has reached its maximum of {tournament.max_teams} approved teams.")
+            return render(request, "registrations/team_form.html", {"form": form})
+
         team = form.save()
 
         Registration.objects.create(
-            tournament=team.tournament,
+            tournament=tournament,
             team=team,
             status="pending"
         )
 
+        messages.success(request, f"{team.name} registered successfully. Awaiting approval.")
         return redirect("team_list")
 
     return render(request, "registrations/team_form.html", {
