@@ -1,17 +1,31 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Create Organization</title>
-</head>
-<body>
-    <h1>Create Organization</h1>
+{% extends "base.html" %}
 
+{% block title %}
+    {% if organization %}Edit Organization{% else %}Create Organization{% endif %} — Nexus
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-left">
+        <div class="page-label">{% if organization %}Edit{% else %}New{% endif %} Organization</div>
+        <h1>{% if organization %}{{ organization.name }}{% else %}Create Organization{% endif %}</h1>
+        <p class="page-meta">
+            {% if organization %}Update your organization details{% else %}Set up a new organization to host tournaments{% endif %}
+        </p>
+    </div>
+    <a href="{% url 'organization_list' %}" class="btn btn-ghost">← Back</a>
+</div>
+
+<div class="form-card" style="max-width:560px;">
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
-        <button type="submit">Create</button>
+        <div class="btn-group" style="margin-top:8px;">
+            <button type="submit" class="btn btn-primary">
+                {% if organization %}Update Organization{% else %}Create Organization{% endif %}
+            </button>
+            <a href="{% url 'organization_list' %}" class="btn btn-secondary">Cancel</a>
+        </div>
     </form>
-
-    <a href="/organizations/">Back to Organizations</a>
-</body>
-</html>
+</div>
+{% endblock %}

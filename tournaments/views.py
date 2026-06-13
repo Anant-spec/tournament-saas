@@ -7,14 +7,26 @@ from organizations.models import Organization
 from .forms import TournamentForm
 from registrations.models import Team
 from django.views.decorators.http import require_POST
+from django.contrib import messages
+from django.db import transaction
+from django.core.paginator import Paginator
 
 @login_required
 def tournament_list(request):
-    tournaments = Tournament.objects.filter(
-        organization__owner=request.user
+    tournaments = (
+        Tournament.objects
+        .filter(organization__owner=request.user)
+        .select_related("organization", "champion")
+        .order_by("-created_at")
     )
+
+    paginator = Paginator(tournaments, 6)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
     return render(request, "tournaments/tournament_list.html", {
-        "tournaments": tournaments
+        "page_obj": page_obj,
+        "tournaments": page_obj,
     })
 
 @login_required
@@ -22,7 +34,20 @@ def tournament_create(request):
     form = TournamentForm(request.POST or None, user=request.user)
 
     if form.is_valid():
-        tournament = form.save()
+        tournament = form.save(commit=False)  # Don't save to DB yet
+        
+        from django.utils.text import slugify
+        base_slug = slugify(tournament.name)
+        slug = base_slug
+        counter = 1
+        
+        while Tournament.objects.filter(organization=tournament.organization, slug=slug).exists():
+            slug = f"{base_slug}-{counter}"
+            counter += 1
+        
+        tournament.slug = slug
+        tournament.save()  # NOW save to DB with the unique slug
+        
         return redirect("tournament_list")
 
     return render(request, "tournaments/tournament_form.html", {
@@ -45,7 +70,11 @@ def tournament_edit(request, pk):
 
     if form.is_valid():
         form.save()
-        return redirect("tournament_list")
+        messages.success(request, "Tournament updated successfully.")
+        return redirect("tournament_detail", pk=tournament.pk)
+
+    if request.method == "POST":
+        messages.error(request, "Please correct the errors below.")
 
     return render(request, "tournaments/tournament_form.html", {
         "form": form,
@@ -72,159 +101,143 @@ def tournament_delete(request, pk):
 @login_required
 def tournament_detail(request, pk):
     tournament = get_object_or_404(
-        Tournament,
+        Tournament.objects.select_related("organization","champion"),
         pk=pk,
         organization__owner=request.user
     )
-    matches = tournament.matches.all().order_by("round_number", "match_number")
 
-    rounds = {}
+    matches = tournament.matches.all().order_by("round_number", "match_number")
+    registrations = tournament.registrations.select_related("team").all()
+
+    grouped_matches = {}
     for match in matches:
-        rounds.setdefault(match.round_number, []).append(match)
+        grouped_matches.setdefault(match.round_number, []).append(match)
 
     return render(request, "tournaments/tournament_detail.html", {
         "tournament": tournament,
-        "rounds": rounds
+        "registrations": registrations,
+        "matches": matches,
+        "grouped_matches": grouped_matches,
     })
-
-@login_required
-def generate_bracket(request, pk):
-    tournament = get_object_or_404(
-        Tournament,
-        pk=pk,
-        organization__owner=request.user
-    )
-
-    if tournament.format_type != "single_elimination":
-        return redirect("tournament_detail", pk=tournament.id)
-
-    teams = list(tournament.teams.all().order_by("created_at"))
-
-    if len(teams) < 2:
-        return redirect("tournament_detail", pk=tournament.id)
-
-    tournament.matches.all().delete()
-    tournament.champion = None
-    tournament.status = "draft"
-    tournament.save(update_fields=["champion", "status"])
-
-    team_count = len(teams)
-    total_rounds = math.ceil(math.log2(team_count))
-    bracket_size = 2 ** total_rounds
-
-    all_round_matches = {}
-
-    for round_number in range(1, total_rounds + 1):
-        match_count = bracket_size // (2 ** round_number)
-        matches = []
-
-        for match_number in range(1, match_count + 1):
-            match = Match.objects.create(
-                tournament=tournament,
-                round_number=round_number,
-                match_number=match_number
-            )
-            matches.append(match)
-
-        all_round_matches[round_number] = matches
-
-    for round_number in range(1, total_rounds):
-        current_round = all_round_matches[round_number]
-        next_round = all_round_matches[round_number + 1]
-
-        for index, match in enumerate(current_round):
-            match.next_match = next_round[index // 2]
-            match.save(update_fields=["next_match"])
-
-    slots = teams + [None] * (bracket_size - team_count)
-
-    first_round_matches = all_round_matches[1]
-
-    for i, match in enumerate(first_round_matches):
-        team1 = slots[i * 2]
-        team2 = slots[i * 2 + 1]
-
-        match.team1 = team1
-        match.team2 = team2
-
-        if team1 and not team2:
-            match.winner = team1
-            match.status = "completed"
-        elif team2 and not team1:
-            match.winner = team2
-            match.status = "completed"
-
-        match.save()
-
-    for match in first_round_matches:
-        if match.winner and match.next_match:
-            next_match = match.next_match
-
-            if next_match.team1 is None:
-                next_match.team1 = match.winner
-            elif next_match.team2 is None:
-                next_match.team2 = match.winner
-
-            next_match.save()
-
-    return redirect("tournament_detail", pk=tournament.id)
-
-@login_required
-def report_match_result(request, match_id):
-    match = get_object_or_404(
-        Match,
-        pk=match_id,
-        tournament__organization__owner=request.user
-    )
-
-    if request.method == "POST":
-        winner_id = request.POST.get("winner")
-
-        if str(match.team1_id) == winner_id:
-            winner = match.team1
-        elif str(match.team2_id) == winner_id:
-            winner = match.team2
-        else:
-            return redirect("tournament_detail", pk=match.tournament.id)
-
-        match.winner = winner
-        match.status = "completed"
-        match.save(update_fields=["winner", "status"])
-
-        tournament = match.tournament
-
-        if match.next_match:
-            next_match = match.next_match
-
-            if next_match.team1 is None:
-                next_match.team1 = winner
-            elif next_match.team2 is None:
-                next_match.team2 = winner
-
-            next_match.save(update_fields=["team1", "team2"])
-
-            if tournament.status in ["draft", "published"]:
-                tournament.status = "ongoing"
-                tournament.save(update_fields=["status"])
-        else:
-            tournament.status = "completed"
-            tournament.champion_id = winner.id
-            tournament.save(update_fields=["status", "champion_id"])
-
-        return redirect("tournament_detail", pk=tournament.id)
-
-    return redirect("tournament_detail", pk=match.tournament.id)
 
 
 
 @login_required
 @require_POST
+@transaction.atomic
+def generate_bracket(request, pk):
+    tournament = get_object_or_404(
+        Tournament.objects.select_for_update(),
+        pk=pk,
+        organization__owner=request.user
+    )
+
+    if tournament.format_type != "single_elimination":
+        messages.error(request, "Bracket generation is only available for single elimination tournaments.")
+        return redirect("tournament_detail", pk=tournament.id)
+
+    if tournament.matches.exists():
+        messages.error(request, "Bracket has already been generated for this tournament.")
+        return redirect("tournament_detail", pk=tournament.id)
+
+    registrations = (
+        tournament.registrations
+        .filter(status="approved")
+        .select_related("team")
+        .order_by("created_at", "id")
+    )
+    teams = [r.team for r in registrations]
+
+    if len(teams) < 2:
+        messages.error(request, "At least 2 approved teams are required to generate a bracket.")
+        return redirect("tournament_detail", pk=tournament.id)
+
+    team_count = len(teams)
+    total_rounds = math.ceil(math.log2(team_count))
+    bracket_size = 2 ** total_rounds
+
+    # --- FIX: bulk_create all matches in ONE query instead of N queries ---
+    all_matches_to_create = []
+    for round_number in range(1, total_rounds + 1):
+        match_count = bracket_size // (2 ** round_number)
+        for match_number in range(1, match_count + 1):
+            all_matches_to_create.append(
+                Match(
+                    tournament=tournament,
+                    round_number=round_number,
+                    match_number=match_number,
+                )
+            )
+
+    created_matches = Match.objects.bulk_create(all_matches_to_create)
+
+    # Rebuild all_round_matches dict from created matches
+    all_round_matches = {}
+    for match in created_matches:
+        all_round_matches.setdefault(match.round_number, []).append(match)
+
+    for round_number in all_round_matches:
+        all_round_matches[round_number].sort(key=lambda m: m.match_number)
+
+    # Link next_match for each round
+    matches_to_update = []
+    for round_number in range(1, total_rounds):
+        current_round = all_round_matches[round_number]
+        next_round = all_round_matches[round_number + 1]
+        for index, match in enumerate(current_round):
+            match.next_match = next_round[index // 2]
+            matches_to_update.append(match)
+
+    Match.objects.bulk_update(matches_to_update, ["next_match"])  # ONE query
+
+    # Assign teams to first round slots
+    slots = teams + [None] * (bracket_size - team_count)
+    first_round_matches = all_round_matches[1]
+    first_round_to_update = []
+
+    for i, match in enumerate(first_round_matches):
+        match.team1 = slots[i * 2]
+        match.team2 = slots[i * 2 + 1]
+        first_round_to_update.append(match)
+
+    Match.objects.bulk_update(first_round_to_update, ["team1", "team2"])  # ONE query
+
+    final_match = all_round_matches[total_rounds][0]
+    if final_match.winner:
+        tournament.status = "completed"
+        tournament.champion = final_match.winner
+        tournament.save(update_fields=["status", "champion"])
+    else:
+        tournament.status = "published"
+        tournament.champion = None
+        tournament.save(update_fields=["status", "champion"])
+
+    messages.success(request, "Bracket generated successfully.")
+    return redirect("tournament_detail", pk=tournament.id)
+
+
+
+@login_required
+@require_POST
+@transaction.atomic
 def report_match_result(request, match_id):
     match = get_object_or_404(
-        Match,
+        Match.objects.select_for_update().select_related(
+            "tournament", "next_match", "team1", "team2"
+        ),
         pk=match_id,
-        tournament__organization__owner=request.user
+        tournament__organization__owner=request.user,
     )
+
+    tournament = match.tournament
+
+    if match.status == "completed":
+        messages.error(request, "This match result has already been reported.")
+        return redirect("tournament_detail", pk=tournament.id)
+
+    if not match.team1 or not match.team2:
+        messages.error(request, "This match is not ready yet.")
+        return redirect("tournament_detail", pk=tournament.id)
 
     winner_id = request.POST.get("winner")
 
@@ -233,16 +246,15 @@ def report_match_result(request, match_id):
     elif str(match.team2_id) == winner_id:
         winner = match.team2
     else:
-        return redirect("tournament_detail", pk=match.tournament.id)
+        messages.error(request, "Invalid winner selected.")
+        return redirect("tournament_detail", pk=tournament.id)
 
     match.winner = winner
     match.status = "completed"
     match.save(update_fields=["winner", "status"])
 
-    tournament = match.tournament
-
     if match.next_match:
-        next_match = match.next_match
+        next_match = Match.objects.select_for_update().get(pk=match.next_match.pk)
 
         if next_match.team1 is None:
             next_match.team1 = winner
@@ -250,13 +262,30 @@ def report_match_result(request, match_id):
         elif next_match.team2 is None:
             next_match.team2 = winner
             next_match.save(update_fields=["team2"])
+        else:
+            messages.error(request, "Next match already has two teams assigned.")
+            return redirect("tournament_detail", pk=tournament.id)
 
         if tournament.status in ["draft", "published"]:
             tournament.status = "ongoing"
-            tournament.save(update_fields=["status"])
+            tournament.champion = None
+            tournament.save(update_fields=["status", "champion"])
     else:
         tournament.status = "completed"
-        tournament.champion_id = winner.id
-        tournament.save(update_fields=["status", "champion_id"])
+        tournament.champion = winner
+        tournament.save(update_fields=["status", "champion"])
 
+    final_match = (
+        Match.objects.select_for_update()
+        .filter(tournament=tournament)
+        .order_by("-round_number", "-match_number")
+        .first()
+    )
+
+    if final_match and final_match.winner:
+        tournament.status = "completed"
+        tournament.champion = final_match.winner
+        tournament.save(update_fields=["status", "champion"])
+
+    messages.success(request, "Match result reported successfully.")
     return redirect("tournament_detail", pk=tournament.id)

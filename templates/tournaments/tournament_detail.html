@@ -1,73 +1,170 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>{{ tournament.name }}</title>
-</head>
-<body>
-    <h1>{{ tournament.name }}</h1>
+{% extends "base.html" %}
+{% block title %}{{ tournament.name }} — Nexus{% endblock %}
 
-    <p>Organization: {{ tournament.organization.name }}</p>
-    <p>Game: {{ tournament.game_title }}</p>
-    <p>Format: {{ tournament.get_format_type_display }}</p>
-    <p>Status: {{ tournament.get_status_display }}</p>
+{% block content %}
 
-    {% if tournament.champion %}
-        <p><strong>Champion:</strong> {{ tournament.champion.name }}</p>
-    {% endif %}
+<!-- Page Header -->
+<div class="page-header">
+    <div class="page-header-left">
+        <div class="page-label">Tournament Detail</div>
+        <h1>
+            {{ tournament.name }}
+            <span class="badge badge-{{ tournament.status }}" style="vertical-align:middle; margin-left:8px;">{{ tournament.status }}</span>
+        </h1>
+        <p class="page-meta">
+            {{ tournament.game_title }}&nbsp;&middot;&nbsp;{{ tournament.get_format_type_display }}
+            {% if tournament.organization %}&nbsp;&middot;&nbsp;{{ tournament.organization.name }}{% endif %}
+        </p>
+    </div>
+    <div class="btn-group">
+        <a href="{% url 'tournament_edit' tournament.id %}" class="btn btn-secondary">Edit</a>
+        <a href="{% url 'tournament_delete' tournament.id %}" class="btn btn-danger">Delete</a>
+        <a href="{% url 'tournament_list' %}" class="btn btn-ghost">← Back</a>
+    </div>
+</div>
 
-    <p>Registration Open: {{ tournament.registration_open }}</p>
-    <p>Start Date: {{ tournament.start_date }}</p>
-    <p>ID: {{ tournament.id }}</p>
+<!-- Champion Banner -->
+{% if tournament.champion %}
+<div class="card card-accent" style="margin-bottom:28px; display:flex; align-items:center; gap:14px;">
+    <div style="font-size:1.8rem;">🏆</div>
+    <div>
+        <div class="mono text-amber" style="margin-bottom:2px;">Tournament Champion</div>
+        <div style="font-family:'Rajdhani',sans-serif; font-size:1.3rem; font-weight:700; color:var(--white); text-transform:uppercase;">
+            {{ tournament.champion.name }}
+        </div>
+    </div>
+</div>
+{% endif %}
 
-    <p>
-        <a href="{% url 'tournament_edit' tournament.id %}">Edit</a>
-        |
-        <a href="{% url 'tournament_delete' tournament.id %}">Delete</a>
-        |
-        <a href="{% url 'tournament_list' %}">Back to List</a>
-    </p>
+<hr>
 
-    <p>
-        <a href="{% url 'generate_bracket' tournament.id %}">Generate Bracket</a>
-    </p>
+<!-- Registered Teams Section -->
+<div class="section">
+    <div class="section-header">
+        <h2>Registered Teams</h2>
+        <span class="mono text-muted">{{ registrations|length }} team{% if registrations|length != 1 %}s{% endif %}</span>
+    </div>
 
-    <h2>Bracket</h2>
-
-    {% if rounds %}
-        {% for round_number, matches in rounds.items %}
-            <h3>Round {{ round_number }}</h3>
-            <ul>
-                {% for match in matches %}
-                    <li>
-                        Match {{ match.match_number }}:
-                        {{ match.team1|default:"TBD" }}
-                        vs
-                        {{ match.team2|default:"TBD" }}
-
-                        {% if match.winner %}
-                            - Winner: {{ match.winner }}
-                        {% elif match.team1 and match.team2 %}
-                            <form method="post" action="{% url 'report_match_result' match.id %}">
-                                {% csrf_token %}
-                                <label>
-                                    <input type="radio" name="winner" value="{{ match.team1.id }}" required>
-                                    {{ match.team1.name }}
-                                </label>
-
-                                <label>
-                                    <input type="radio" name="winner" value="{{ match.team2.id }}" required>
-                                    {{ match.team2.name }}
-                                </label>
-
-                                <button type="submit">Submit Result</button>
-                            </form>
-                        {% endif %}
-                    </li>
-                {% endfor %}
-            </ul>
-        {% endfor %}
+    {% if registrations %}
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Team</th>
+                        <th>Captain</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for registration in registrations %}
+                        <tr>
+                            <td class="mono text-muted">{{ forloop.counter }}</td>
+                            <td style="font-family:'Rajdhani',sans-serif; font-weight:600; color:var(--wire); text-transform:uppercase; letter-spacing:0.03em;">
+                                {{ registration.team.name }}
+                            </td>
+                            <td class="text-muted">{{ registration.team.captain_name }}</td>
+                            <td><span class="badge badge-{{ registration.status }}">{{ registration.status }}</span></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     {% else %}
-        <p>No bracket generated yet.</p>
+        <div class="empty-state">
+            <div class="empty-state-icon">◈</div>
+            <h3>No registrations yet</h3>
+            <p>Teams will appear here once they register for this tournament.</p>
+            <a href="{% url 'team_create' %}" class="btn btn-secondary">Register a Team</a>
+        </div>
     {% endif %}
-</body>
-</html>
+</div>
+
+<hr>
+
+<!-- Bracket Section -->
+<div class="section">
+    <div class="section-header">
+        <h2>Bracket</h2>
+        {% if matches %}
+            <span class="mono text-muted">{{ matches|length }} match{% if matches|length != 1 %}es{% endif %}</span>
+        {% endif %}
+    </div>
+
+    {% if matches %}
+        <div class="bracket-board">
+            {% for round_number, round_matches in grouped_matches.items %}
+                <div class="bracket-round">
+                    <div class="round-header">Round {{ round_number }}</div>
+
+                    <div class="bracket-round-stack">
+                        {% for match in round_matches %}
+                            <div class="match-card {{ match.status }}">
+                                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+                                    <span class="mono text-muted">Match {{ match.match_number }}</span>
+                                    <span class="badge {% if match.status == 'completed' %}badge-completed{% else %}badge-ongoing{% endif %}">
+                                        {{ match.status }}
+                                    </span>
+                                </div>
+
+                                <div class="bracket-team {% if match.winner_id == match.team1_id %}winner{% endif %}">
+                                    <span>{{ match.team1.name|default:"TBD" }}</span>
+                                </div>
+
+                                <div class="bracket-team {% if match.winner_id == match.team2_id %}winner{% endif %}">
+                                    <span>{{ match.team2.name|default:"TBD" }}</span>
+                                </div>
+
+                                {% if match.winner %}
+                                    <div style="margin-top:10px; display:flex; align-items:center; gap:6px;">
+                                        <span style="font-size:0.9rem;">🏆</span>
+                                        <span style="font-family:'Rajdhani',sans-serif; font-weight:600; font-size:0.85rem; color:#34d399; text-transform:uppercase; letter-spacing:0.04em;">
+                                            {{ match.winner.name }}
+                                        </span>
+                                    </div>
+                                {% endif %}
+
+                                {% if match.status != "completed" and match.team1 and match.team2 %}
+                                    <form method="post" action="{% url 'report_match_result' match.id %}" style="margin-top:14px; padding-top:12px; border-top:1px solid var(--rim);">
+                                        {% csrf_token %}
+                                        <div class="mono text-muted" style="margin-bottom:8px; font-size:0.6rem; letter-spacing:0.12em;">SELECT WINNER</div>
+                                        <div class="btn-group" style="margin-bottom:10px;">
+                                            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:var(--pale); font-size:0.85rem;">
+                                                <input type="radio" name="winner" value="{{ match.team1.id }}" required style="accent-color:var(--amber);">
+                                                <span style="font-family:'Rajdhani',sans-serif; font-weight:600; text-transform:uppercase; letter-spacing:0.04em;">{{ match.team1.name }}</span>
+                                            </label>
+                                            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:var(--pale); font-size:0.85rem;">
+                                                <input type="radio" name="winner" value="{{ match.team2.id }}" style="accent-color:var(--amber);">
+                                                <span style="font-family:'Rajdhani',sans-serif; font-weight:600; text-transform:uppercase; letter-spacing:0.04em;">{{ match.team2.name }}</span>
+                                            </label>
+                                        </div>
+                                        <button type="submit" class="btn btn-success btn-sm">Submit Result</button>
+                                    </form>
+                                {% elif match.status == "completed" %}
+                                    <p class="text-muted text-sm" style="margin-top:8px;">Result locked.</p>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">◬</div>
+            <h3>No bracket yet</h3>
+            <p>Approve at least 2 teams, then generate the bracket to start the tournament.</p>
+
+            {% if tournament.format_type == "single_elimination" %}
+                <form method="post" action="{% url 'generate_bracket' tournament.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary">Generate Bracket</button>
+                </form>
+            {% else %}
+                <p class="text-muted text-sm mt-1">Bracket generation is only available for single elimination format.</p>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}

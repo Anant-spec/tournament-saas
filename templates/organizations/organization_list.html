@@ -1,23 +1,45 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Organizations</title>
-</head>
-<body>
-    <h1>Organizations</h1>
+{% extends "base.html" %}
+{% block title %}Organizations — Nexus{% endblock %}
 
-    <a href="/organizations/create/">Create New Organization</a>
+{% block content %}
+<div class="page-header">
+    <div class="page-header-left">
+        <div class="page-label">Organizations</div>
+        <h1>Your Organizations</h1>
+        <p class="page-meta">Manage the organizations you own</p>
+    </div>
+    <div class="btn-group">
+        <a href="{% url 'organization_create' %}" class="btn btn-primary">+ New Organization</a>
+    </div>
+</div>
 
-    <ul>
-        {% for organization in organizations %}
-            <li>
-                {{ organization.name }} - {{ organization.slug }}
-                <a href="/organizations/update/{{ organization.id }}/">Edit</a>
-                <a href="/organizations/delete/{{ organization.id }}/">Delete</a>
-            </li>
-        {% empty %}
-            <li>No organizations found.</li>
+{% if organizations %}
+    <div class="org-grid">
+        {% for org in organizations %}
+            <div class="org-card">
+                <div class="org-avatar">{{ org.name|slice:":2" }}</div>
+                <div style="font-family:'Rajdhani',sans-serif; font-size:1.1rem; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:var(--white); margin-bottom:4px;">
+                    {{ org.name }}
+                </div>
+                {% if org.description %}
+                    <p class="text-muted text-sm" style="margin-bottom:14px;">{{ org.description }}</p>
+                {% else %}
+                    <p class="text-muted text-sm" style="margin-bottom:14px;">No description.</p>
+                {% endif %}
+                <div class="btn-group">
+                    <a href="{% url 'organization_detail' org.id %}" class="btn btn-secondary btn-sm">View</a>
+                    <a href="{% url 'organization_update' org.id %}" class="btn btn-ghost btn-sm">Edit</a>
+                    <a href="{% url 'organization_delete' org.id %}" class="btn btn-danger btn-sm">Delete</a>
+                </div>
+            </div>
         {% endfor %}
-    </ul>
-</body>
-</html>
+    </div>
+{% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">⊙</div>
+        <h3>No organizations yet</h3>
+        <p>Create an organization to start hosting tournaments under your brand.</p>
+        <a href="{% url 'organization_create' %}" class="btn btn-primary">Create Organization</a>
+    </div>
+{% endif %}
+{% endblock %}

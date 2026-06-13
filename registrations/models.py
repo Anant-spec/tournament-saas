@@ -25,6 +25,11 @@ class Registration(models.Model):
     team = models.OneToOneField(Team, on_delete=models.CASCADE, related_name="registration")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
     created_at = models.DateTimeField(auto_now_add=True)
+    approved_at = models.DateTimeField(null=True, blank=True)  
+    rejected_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["created_at", "id"]
 
     def __str__(self):
         return f"{self.team.name} - {self.tournament.name}"

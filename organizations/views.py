@@ -5,7 +5,9 @@ from .forms import OrganizationForm
 
 @login_required
 def organization_list(request):
-    organizations = Organization.objects.filter(owner=request.user)
+    organizations = Organization.objects.filter(
+        owner=request.user
+    ).prefetch_related("tournaments")  # ADD THIS
     return render(request, "organizations/organization_list.html", {
         "organizations": organizations
     })
@@ -46,5 +48,13 @@ def organization_delete(request, pk):
         return redirect("organization_list")
 
     return render(request, "organizations/organization_confirm_delete.html", {
+        "organization": organization
+    })
+
+
+@login_required
+def organization_detail(request, pk):
+    organization = get_object_or_404(Organization, pk=pk, owner=request.user)
+    return render(request, "organizations/organization_detail.html", {
         "organization": organization
     })

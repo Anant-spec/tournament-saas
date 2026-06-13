@@ -1,30 +1,76 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Tournaments</title>
-</head>
-<body>
-    <h1>Tournaments</h1>
+{% extends "base.html" %}
+{% block title %}Tournaments — Nexus{% endblock %}
 
-    <a href="{% url 'tournament_create' %}">Create New Tournament</a>
+{% block content %}
+<div class="page-header">
+    <div class="page-header-left">
+        <div class="page-label">Command Center</div>
+        <h1>Tournaments</h1>
+        <p class="page-meta">All tournaments across your organizations</p>
+    </div>
+    <div class="btn-group">
+        <a href="{% url 'tournament_create' %}" class="btn btn-primary">+ New Tournament</a>
+    </div>
+</div>
 
-    <ul>
+{% if tournaments %}
+    <div class="tournament-grid">
         {% for tournament in tournaments %}
-            <li>
-                <a href="{% url 'tournament_detail' tournament.id %}">
-                    {{ tournament.name }}
-                </a>
-                - {{ tournament.game_title }}
-                - {{ tournament.format_type }}
-                - {{ tournament.status }}
-                - UUID: {{ tournament.id }}
+            <div class="tournament-card">
+                <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:8px;">
+                    <a href="{% url 'tournament_detail' tournament.id %}" class="tournament-card-title">
+                        {{ tournament.name }}
+                    </a>
+                    <span class="badge badge-{{ tournament.status }}">{{ tournament.status }}</span>
+                </div>
 
-                | <a href="{% url 'tournament_edit' tournament.id %}">Edit</a>
-                | <a href="{% url 'tournament_delete' tournament.id %}">Delete</a>
-            </li>
-        {% empty %}
-            <li>No tournaments found.</li>
+                <div class="tournament-card-meta">
+                    {{ tournament.game_title }}&nbsp;&middot;&nbsp;{{ tournament.get_format_type_display }}
+                    {% if tournament.organization %}
+                        &nbsp;&middot;&nbsp;{{ tournament.organization.name }}
+                    {% endif %}
+                </div>
+
+                {% if tournament.champion %}
+                    <div style="margin-bottom:12px;">
+                        <span class="badge badge-completed">🏆 {{ tournament.champion.name }}</span>
+                    </div>
+                {% endif %}
+
+                <div class="btn-group mt-1">
+                    <a href="{% url 'tournament_detail' tournament.id %}" class="btn btn-secondary btn-sm">View</a>
+                    <a href="{% url 'tournament_edit' tournament.id %}" class="btn btn-ghost btn-sm">Edit</a>
+                    <a href="{% url 'tournament_delete' tournament.id %}" class="btn btn-danger btn-sm">Delete</a>
+                </div>
+            </div>
         {% endfor %}
-    </ul>
-</body>
-</html>
+    </div>
+{% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">⬡</div>
+        <h3>No tournaments yet</h3>
+        <p>Create your first tournament and start managing teams and brackets.</p>
+        <a href="{% url 'tournament_create' %}" class="btn btn-primary">Create Tournament</a>
+    </div>
+{% endif %}
+
+{% if page_obj.paginator.num_pages > 1 %}
+    <div class="pagination">
+        <div class="btn-group" style="justify-content:center; margin-top:20px;">
+            {% if page_obj.has_previous %}
+                <a href="?page=1" class="btn btn-ghost btn-sm">First</a>
+                <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-secondary btn-sm">Previous</a>
+            {% endif %}
+
+            <span class="btn btn-ghost btn-sm">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            </span>
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}" class="btn btn-secondary btn-sm">Next</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}" class="btn btn-ghost btn-sm">Last</a>
+            {% endif %}
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

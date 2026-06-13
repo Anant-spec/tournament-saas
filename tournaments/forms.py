@@ -8,23 +8,30 @@ class TournamentForm(forms.ModelForm):
         fields = [
             "organization",
             "name",
-            "slug",
             "game_title",
             "format_type",
-            "status",
-            "registration_open",
             "start_date",
         ]
 
     def __init__(self, *args, **kwargs):
-        self.user = kwargs.pop("user", None)
+        user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
 
-        if self.user is not None:
-            self.fields["organization"].queryset = Organization.objects.filter(owner=self.user)
+        if user:
+            self.fields["organization"].queryset = self.fields["organization"].queryset.filter(owner=user)
+
+        if self.instance and self.instance.pk and self.instance.matches.exists():
+            self.fields["organization"].disabled = True
+            self.fields["format_type"].disabled = True
+            self.fields["organization"].required = False
+            self.fields["format_type"].required = False
 
     def clean_organization(self):
-        organization = self.cleaned_data["organization"]
-        if self.user is not None and organization.owner != self.user:
-            raise forms.ValidationError("Invalid organization.")
-        return organization
+        if self.instance and self.instance.pk and self.instance.matches.exists():
+            return self.instance.organization
+        return self.cleaned_data.get("organization")
+
+    def clean_format_type(self):
+        if self.instance and self.instance.pk and self.instance.matches.exists():
+            return self.instance.format_type
+        return self.cleaned_data.get("format_type")

@@ -1,18 +1,30 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Delete Organization</title>
-</head>
-<body>
-    <h1>Delete Organization</h1>
+{% extends "base.html" %}
+{% block title %}Delete {{ organization.name }} — Nexus{% endblock %}
 
-    <p>Are you sure you want to delete "{{ organization.name }}"?</p>
+{% block content %}
+<div class="page-header">
+    <div class="page-header-left">
+        <div class="page-label">Danger Zone</div>
+        <h1>Delete Organization</h1>
+    </div>
+    <a href="{% url 'organization_list' %}" class="btn btn-ghost">← Cancel</a>
+</div>
 
-    <form method="post">
-        {% csrf_token %}
-        <button type="submit">Yes, Delete</button>
-    </form>
-
-    <a href="/organizations/">Cancel</a>
-</body>
-</html>
+<div style="max-width:520px;">
+    <div class="danger-zone">
+        <h2>Confirm Deletion</h2>
+        <p>
+            You are about to permanently delete <strong style="color:var(--white);">{{ organization.name }}</strong>.
+            All tournaments, registrations, and brackets under this organization will be permanently removed.
+            This action cannot be undone.
+        </p>
+        <form method="post">
+            {% csrf_token %}
+            <div class="btn-group">
+                <button type="submit" class="btn btn-danger">Yes, Delete Organization</button>
+                <a href="{% url 'organization_list' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

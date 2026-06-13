@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}{{ organization.name }} — Nexus{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-left">
+        <div class="page-label">Organization</div>
+        <h1>{{ organization.name }}</h1>
+        <p class="page-meta">Slug: {{ organization.slug }} &nbsp;·&nbsp; Created: {{ organization.created_at|date:"d M Y" }}</p>
+    </div>
+    <div class="btn-group">
+        <a href="{% url 'organization_update' organization.pk %}" class="btn btn-secondary">Edit</a>
+        <a href="{% url 'organization_delete' organization.pk %}" class="btn btn-danger">Delete</a>
+    </div>
+</div>
+
+<div class="section">
+    <div class="section-header">
+        <h2>Tournaments</h2>
+        <a href="{% url 'tournament_create' %}" class="btn btn-primary btn-sm">+ New Tournament</a>
+    </div>
+
+    {% with tournaments=organization.tournaments.all %}
+        {% if tournaments %}
+            <div class="tournament-grid">
+                {% for tournament in tournaments %}
+                    <div class="tournament-card">
+                        <a href="{% url 'tournament_detail' tournament.pk %}" class="tournament-card-title">
+                            {{ tournament.name }}
+                        </a>
+                        <div class="tournament-card-meta">{{ tournament.game_title }}</div>
+                        <div class="btn-group">
+                            <span class="badge badge-{{ tournament.status }}">{{ tournament.status }}</span>
+                            <span class="badge badge-{{ tournament.format_type }}">{{ tournament.format_type|title }}</span>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">◈</div>
+                <h3>No tournaments yet</h3>
+                <p>This organization has no tournaments.</p>
+                <a href="{% url 'tournament_create' %}" class="btn btn-primary">Create Tournament</a>
+            </div>
+        {% endif %}
+    {% endwith %}
+</div>
+
+<div class="section">
+    <div class="section-header">
+        <h2>Members</h2>
+    </div>
+    {% with members=organization.memberships.select_related %}
+        {% if members %}
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Role</th>
+                            <th>Joined</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for membership in members %}
+                            <tr>
+                                <td>{{ membership.user.email }}</td>
+                                <td><span class="badge badge-draft">{{ membership.role }}</span></td>
+                                <td class="mono text-muted">{{ membership.created_at|date:"d M Y" }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-muted text-sm">No members beyond the owner.</p>
+        {% endif %}
+    {% endwith %}
+</div>
+{% endblock %}

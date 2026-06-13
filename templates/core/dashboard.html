@@ -1,54 +1,55 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Dashboard</title>
-</head>
-<body>
-    <h1>Dashboard</h1>
+{% extends "base.html" %}
 
-    <form method="post" action="{% url 'logout' %}">
-        {% csrf_token %}
-        <button type="submit">Logout</button>
-    </form>
-    
-    <h1>Organizer Dashboard</h1>
+{% block title %}Dashboard{% endblock %}
 
-    <p>Total Organizations: {{ organization_count }}</p>
-    <p>Total Tournaments: {{ tournament_count }}</p>
-    <p>Total Teams: {{ team_count }}</p>
+{% block content %}
+<h1>Dashboard</h1>
 
-    <h2>Quick Links</h2>
-    <ul>
-        <li><a href="/organizations/create/">Create Organization</a></li>
-        <li><a href="/tournaments/create/">Create Tournament</a></li>
-        <li><a href="/registrations/create/">Register Team</a></li>
-    </ul>
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-number">{{ total_organizations }}</div>
+        <div class="stat-label">Organizations</div>
+    </div>
 
-    <h2>Recent Organizations</h2>
-    <ul>
-        {% for organization in recent_organizations %}
-            <li>{{ organization.name }} - {{ organization.slug }}</li>
-        {% empty %}
-            <li>No organizations yet.</li>
-        {% endfor %}
-    </ul>
+    <div class="stat-card">
+        <div class="stat-number">{{ total_tournaments }}</div>
+        <div class="stat-label">Tournaments</div>
+    </div>
 
-    <h2>Recent Tournaments</h2>
-    <ul>
-        {% for tournament in recent_tournaments %}
-            <li>{{ tournament.name }} - {{ tournament.game_title }}</li>
-        {% empty %}
-            <li>No tournaments yet.</li>
-        {% endfor %}
-    </ul>
+    <div class="stat-card">
+        <div class="stat-number">{{ total_registrations }}</div>
+        <div class="stat-label">Registrations</div>
+    </div>
 
-    <h2>Recent Teams</h2>
-    <ul>
-        {% for team in recent_teams %}
-            <li>{{ team.name }} - {{ team.tournament.name }}</li>
-        {% empty %}
-            <li>No teams yet.</li>
-        {% endfor %}
-    </ul>
-</body>
-</html>
+    <div class="stat-card">
+        <div class="stat-number">{{ draft_tournaments }}</div>
+        <div class="stat-label">Draft</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-number">{{ ongoing_tournaments }}</div>
+        <div class="stat-label">Ongoing</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-number">{{ completed_tournaments }}</div>
+        <div class="stat-label">Completed</div>
+    </div>
+</div>
+
+<h2>Recent Tournaments</h2>
+
+{% for tournament in recent_tournaments %}
+    <div class="card">
+        <h3>
+            <a href="{% url 'tournament_detail' tournament.id %}">{{ tournament.name }}</a>
+            <span class="badge badge-{{ tournament.status }}">{{ tournament.status }}</span>
+        </h3>
+        <p>{{ tournament.game_title }} &middot; {{ tournament.format_type }}</p>
+    </div>
+{% empty %}
+    <div class="card">
+        <p>No tournaments yet.</p>
+    </div>
+{% endfor %}
+{% endblock %}

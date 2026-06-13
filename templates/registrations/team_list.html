@@ -1,24 +1,117 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Teams</title>
-</head>
-<body>
-    <h1>Registered Teams</h1>
+{% extends "base.html" %}
+{% block title %}Registrations — Nexus{% endblock %}
 
-    <a href="/registrations/create/">Register New Team</a>
+{% block content %}
+<div class="page-header">
+    <div class="page-header-left">
+        <div class="page-label">Registration Management</div>
+        <h1>Registrations</h1>
+        <p class="page-meta">Review and manage team registrations across your tournaments</p>
+    </div>
+    <div class="btn-group">
+        <a href="{% url 'team_create' %}" class="btn btn-primary">+ Register Team</a>
+    </div>
+</div>
 
-    <ul>
-        {% for team in teams %}
-            <li>
-                {{ team.name }} -
-                {{ team.tournament.name }} -
-                {{ team.captain_name }} -
-                {{ team.captain_email }}
-            </li>
-        {% empty %}
-            <li>No teams registered yet.</li>
-        {% endfor %}
-    </ul>
-</body>
-</html>
+{% if registrations %}
+    <!-- Stats row -->
+    <div class="stats-grid" style="margin-bottom:24px;">
+        <div class="stat-card">
+            <div class="stat-number">{{ total_registrations }}</div>
+            <div class="stat-label">Total</div>
+        </div>
+        <div class="stat-card" style="border-left-color:var(--amber);">
+            <div class="stat-number">{{ pending_count }}</div>
+            <div class="stat-label">Pending</div>
+        </div>
+        <div class="stat-card" style="border-left-color:var(--green);">
+            <div class="stat-number">{{ approved_count }}</div>
+            <div class="stat-label">Approved</div>
+        </div>
+        <div class="stat-card" style="border-left-color:var(--red);">
+            <div class="stat-number">{{ rejected_count }}</div>
+            <div class="stat-label">Rejected</div>
+        </div>
+    </div>
+</div>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Team</th>
+                    <th>Captain</th>
+                    <th>Tournament</th>
+                    <th>Registered</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for registration in registrations %}
+                    <tr>
+                        <td>
+                            <span style="font-family:'Rajdhani',sans-serif; font-weight:600; color:var(--wire); text-transform:uppercase; letter-spacing:0.03em;">
+                                {{ registration.team.name }}
+                            </span>
+                        </td>
+                        <td class="text-muted">{{ registration.team.captain_name }}</td>
+                        <td>
+                            <a href="{% url 'tournament_detail' registration.tournament.id %}" style="color:var(--pale); text-decoration:none; font-size:0.82rem;">
+                                {{ registration.tournament.name }}
+                            </a>
+                        </td>
+                        <td class="mono text-muted">{{ registration.created_at|date:"d M Y" }}</td>
+                        <td><span class="badge badge-{{ registration.status }}">{{ registration.status }}</span></td>
+                        <td>
+                            {% if registration.status == "pending" %}
+                                <div class="btn-group">
+                                    <form method="post" action="{% url 'approve_registration' registration.id %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="page" value="{{ page_obj.number }}">
+                                        <button type="submit" class="btn btn-success btn-sm">Approve</button>
+                                    </form>
+                                    <form method="post" action="{% url 'reject_registration' registration.id %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="page" value="{{ page_obj.number }}">
+                                        <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+                                    </form>
+                                </div>
+                            {% else %}
+                                <span class="text-muted text-sm">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">◈</div>
+        <h3>No registrations yet</h3>
+        <p>Register a team to a tournament to get started.</p>
+        <a href="{% url 'team_create' %}" class="btn btn-primary">Register a Team</a>
+    </div>
+{% endif %}
+
+{% if page_obj.paginator.num_pages > 1 %}
+    <div class="pagination">
+        <div class="btn-group" style="justify-content:center; margin-top:20px;">
+            {% if page_obj.has_previous %}
+                <a href="?page=1" class="btn btn-ghost btn-sm">First</a>
+                <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-secondary btn-sm">Previous</a>
+            {% endif %}
+
+            <span class="btn btn-ghost btn-sm">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            </span>
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}" class="btn btn-secondary btn-sm">Next</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}" class="btn btn-ghost btn-sm">Last</a>
+            {% endif %}
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Page Not Found — Nexus{% endblock %}
+
+{% block content %}
+<div style="text-align:center; padding:80px 24px;">
+    <div style="font-family:'Space Mono',monospace; font-size:0.7rem; color:var(--amber); letter-spacing:0.2em; margin-bottom:12px;">ERROR CODE</div>
+    <div style="font-family:'Rajdhani',sans-serif; font-size:6rem; font-weight:700; color:var(--rim); line-height:1; margin-bottom:16px;">404</div>
+    <h2 style="color:var(--pale); margin-bottom:8px;">Page Not Found</h2>
+    <p class="text-muted" style="margin-bottom:28px; max-width:360px; margin-left:auto; margin-right:auto;">
+        This page doesn't exist or you don't have access to it.
+    </p>
+    <a href="{% url 'tournament_list' %}" class="btn btn-primary">Go to Dashboard</a>
+</div>
+{% endblock %}
