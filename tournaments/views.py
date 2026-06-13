@@ -34,20 +34,34 @@ def tournament_create(request):
     form = TournamentForm(request.POST or None, user=request.user)
 
     if form.is_valid():
-        tournament = form.save(commit=False)  # Don't save to DB yet
-        
+        tournament = form.save(commit=False)
+
+        # ✅ PLAN GATE — add this block here
+        org = tournament.organization
+        try:
+            sub = org.subscription
+            active_count = Tournament.objects.filter(organization=org).count()
+            if active_count >= sub.plan.tournament_limit:
+                messages.error(request, f"Your {sub.plan.get_name_display()} plan allows only {sub.plan.tournament_limit} tournaments. Upgrade to create more.")
+                return render(request, "tournaments/tournament_form.html", {"form": form})
+        except Exception:
+            # No subscription found — block creation
+            messages.error(request, "No active plan found for your organization. Please set up a plan.")
+            return render(request, "tournaments/tournament_form.html", {"form": form})
+        # ✅ END PLAN GATE
+
         from django.utils.text import slugify
         base_slug = slugify(tournament.name)
         slug = base_slug
         counter = 1
-        
+
         while Tournament.objects.filter(organization=tournament.organization, slug=slug).exists():
             slug = f"{base_slug}-{counter}"
             counter += 1
-        
+
         tournament.slug = slug
-        tournament.save()  # NOW save to DB with the unique slug
-        
+        tournament.save()
+
         return redirect("tournament_list")
 
     return render(request, "tournaments/tournament_form.html", {
