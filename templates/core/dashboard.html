@@ -5,32 +5,48 @@
 {% block content %}
 <h1>Dashboard</h1>
 
+{% if plan_name %}
+<div class="card" style="margin-bottom: 1.5rem; border-left: 4px solid #6366f1;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <strong>Current Plan:</strong> {{ plan_name }}
+            &nbsp;|&nbsp;
+            <strong>Tournaments:</strong> {{ tournaments_used }} / {{ tournament_limit }} used
+            &nbsp;|&nbsp;
+            <strong>Slots remaining:</strong> {{ slots_remaining }}
+        </div>
+        {% if slots_remaining == 0 %}
+        <span style="color: #ef4444; font-weight: 600;">⚠ Limit reached — upgrade to create more tournaments</span>
+        {% elif slots_remaining <= 2 %}
+        <span style="color: #f59e0b; font-weight: 600;">⚠ Only {{ slots_remaining }} slot(s) left</span>
+        {% else %}
+        <span style="color: #22c55e; font-weight: 600;">✓ Active</span>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
 <div class="stats-grid">
     <div class="stat-card">
         <div class="stat-number">{{ total_organizations }}</div>
         <div class="stat-label">Organizations</div>
     </div>
-
     <div class="stat-card">
         <div class="stat-number">{{ total_tournaments }}</div>
         <div class="stat-label">Tournaments</div>
     </div>
-
     <div class="stat-card">
         <div class="stat-number">{{ total_registrations }}</div>
         <div class="stat-label">Registrations</div>
     </div>
-
     <div class="stat-card">
         <div class="stat-number">{{ draft_tournaments }}</div>
         <div class="stat-label">Draft</div>
     </div>
-
     <div class="stat-card">
         <div class="stat-number">{{ ongoing_tournaments }}</div>
         <div class="stat-label">Ongoing</div>
     </div>
-
     <div class="stat-card">
         <div class="stat-number">{{ completed_tournaments }}</div>
         <div class="stat-label">Completed</div>

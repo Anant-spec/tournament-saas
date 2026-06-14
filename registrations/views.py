@@ -125,3 +125,46 @@ def reject_registration(request, pk):
 
     messages.success(request, f"{registration.team.name} rejected successfully.")
     return redirect(f"{reverse('team_list')}?page={page}")
+
+
+
+
+@login_required
+def player_create(request, team_id):
+    team = get_object_or_404(
+        Team,
+        pk=team_id,
+        tournament__organization__owner=request.user
+    )
+
+    from .forms import PlayerForm
+    from .models import Player
+
+    form = PlayerForm(request.POST or None)
+
+    if form.is_valid():
+        player = form.save(commit=False)
+        player.team = team
+        player.save()
+        messages.success(request, f"{player.in_game_name} added to {team.name}.")
+        return redirect("team_players", team_id=team.pk)
+
+    return render(request, "registrations/player_form.html", {
+        "form": form,
+        "team": team,
+    })
+
+
+@login_required
+def team_players(request, team_id):
+    team = get_object_or_404(
+        Team,
+        pk=team_id,
+        tournament__organization__owner=request.user
+    )
+    players = team.players.all().order_by("role", "created_at")
+
+    return render(request, "registrations/team_players.html", {
+        "team": team,
+        "players": players,
+    })

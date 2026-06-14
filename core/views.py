@@ -13,6 +13,23 @@ def dashboard(request):
     tournaments = Tournament.objects.filter(organization__owner=request.user)
     registrations = Registration.objects.filter(tournament__organization__owner=request.user)
 
+    # Plan info
+    org = organizations.first()
+    plan_name = None
+    tournament_limit = None
+    tournaments_used = None
+    slots_remaining = None
+
+    if org:
+        try:
+            sub = org.subscription
+            plan_name = sub.plan.get_name_display()
+            tournament_limit = sub.plan.tournament_limit
+            tournaments_used = tournaments.count()
+            slots_remaining = max(0, tournament_limit - tournaments_used)
+        except Exception:
+            pass
+
     context = {
         "total_organizations": organizations.count(),
         "total_tournaments": tournaments.count(),
@@ -21,6 +38,10 @@ def dashboard(request):
         "draft_tournaments": tournaments.filter(status="draft").count(),
         "total_registrations": registrations.count(),
         "recent_tournaments": tournaments.order_by("-created_at")[:5],
+        "plan_name": plan_name,
+        "tournament_limit": tournament_limit,
+        "tournaments_used": tournaments_used,
+        "slots_remaining": slots_remaining,
     }
 
     return render(request, "core/dashboard.html", context)

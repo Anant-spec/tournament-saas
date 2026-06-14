@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}{{ team.name }} — Roster{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-left">
+        <div class="page-label">Team Roster</div>
+        <h1>{{ team.name }}</h1>
+        <p class="page-meta">{{ team.tournament.name }} &middot; Captain: {{ team.captain_name }} &middot; {{ team.captain_email }}</p>
+    </div>
+    <div class="btn-group">
+        <a href="{% url 'player_create' team_id=team.pk %}" class="btn btn-primary">+ Add Player</a>
+        <a href="{% url 'team_list' %}" class="btn btn-ghost">← Back</a>
+    </div>
+</div>
+
+{% if players %}
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>In-Game Name</th>
+                <th>Full Name</th>
+                <th>Game UID</th>
+                <th>Role</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for player in players %}
+            <tr>
+                <td class="mono text-muted">{{ forloop.counter }}</td>
+                <td style="color: var(--white); font-family: 'Rajdhani', sans-serif; font-weight: 600; font-size: 0.95rem; letter-spacing: 0.04em;">{{ player.in_game_name }}</td>
+                <td>{{ player.full_name }}</td>
+                <td class="mono text-muted">{{ player.game_uid|default:"—" }}</td>
+                <td>
+                    {% if player.role == "captain" %}
+                        <span class="badge badge-approved">{{ player.get_role_display }}</span>
+                    {% elif player.role == "substitute" %}
+                        <span class="badge badge-draft">{{ player.get_role_display }}</span>
+                    {% else %}
+                        <span class="badge badge-published">{{ player.get_role_display }}</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="empty-state">
+    <div class="empty-state-icon">🎮</div>
+    <h3>No Players Yet</h3>
+    <p>Add players to build the roster for {{ team.name }}.</p>
+    <a href="{% url 'player_create' team_id=team.pk %}" class="btn btn-primary">+ Add First Player</a>
+</div>
+{% endif %}
+{% endblock %}

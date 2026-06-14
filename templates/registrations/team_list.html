@@ -77,15 +77,16 @@
                                         <button type="submit" class="btn btn-danger btn-sm">Reject</button>
                                     </form>
                                 </div>
-                            {% else %}
+                                {% else %}
                                 <span class="text-muted text-sm">—</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+                                {% endif %}
+                                <a href="{% url 'team_players' team_id=registration.team.pk %}" class="btn btn-ghost btn-sm" style="margin-top: 4px;">Roster</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
 {% else %}
     <div class="empty-state">
         <div class="empty-state-icon">◈</div>
