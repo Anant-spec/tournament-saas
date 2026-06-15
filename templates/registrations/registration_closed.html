@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Registration Closed{% endblock %}
+
+{% block content %}
+<div style="max-width:520px; margin:60px auto; text-align:center;">
+    <div style="font-size:2.5rem; margin-bottom:16px;">⛔</div>
+    <h1 style="margin-bottom:8px;">Registration Closed</h1>
+    <p class="page-meta">
+        {% if reason == "full" %}
+            This tournament has reached its maximum team capacity.
+        {% else %}
+            Registration for <strong>{{ tournament.name }}</strong> is currently closed.
+        {% endif %}
+    </p>
+</div>
+{% endblock %}

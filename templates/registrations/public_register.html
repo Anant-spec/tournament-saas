@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Register — {{ tournament.name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-left">
+        <div class="page-label">{{ org.name }}</div>
+        <h1>{{ tournament.name }}</h1>
+        <p class="page-meta">{{ tournament.game_title }} · Register your team below</p>
+    </div>
+</div>
+
+<div class="form-card" style="max-width:520px;">
+    <h2 style="margin-bottom:20px;">Team Registration</h2>
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {% for field in form %}
+        <p>
+            <label>{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}
+                <ul class="errorlist">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+            {% endif %}
+        </p>
+        {% endfor %}
+        <button type="submit" class="btn btn-primary" style="margin-top:8px;">Submit Registration</button>
+    </form>
+</div>
+{% endblock %}

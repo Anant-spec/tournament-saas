@@ -168,3 +168,51 @@ def team_players(request, team_id):
         "team": team,
         "players": players,
     })
+
+
+def public_register(request, org_slug, tournament_slug):
+    from tournaments.models import Tournament
+    from organizations.models import Organization
+
+    org = get_object_or_404(Organization, slug=org_slug)
+    tournament = get_object_or_404(
+        Tournament,
+        slug=tournament_slug,
+        organization=org,
+        status__in=["draft", "published"]
+    )
+
+    # Block if registration is closed
+    if not tournament.registration_open:
+        return render(request, "registrations/registration_closed.html", {
+            "tournament": tournament
+        })
+
+    # Block if max teams already approved
+    approved_count = Registration.objects.filter(
+        tournament=tournament, status="approved"
+    ).count()
+    if approved_count >= tournament.max_teams:
+        return render(request, "registrations/registration_closed.html", {
+            "tournament": tournament,
+            "reason": "full"
+        })
+
+    from .forms import PublicTeamForm
+    form = PublicTeamForm(request.POST or None)
+
+    if form.is_valid():
+        team = form.save(commit=False)
+        team.tournament = tournament
+        team.save()
+        Registration.objects.create(tournament=tournament, team=team, status="pending")
+        return render(request, "registrations/registration_success.html", {
+            "team": team,
+            "tournament": tournament
+        })
+
+    return render(request, "registrations/public_register.html", {
+        "form": form,
+        "tournament": tournament,
+        "org": org,
+    })

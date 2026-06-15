@@ -733,7 +733,15 @@
                 <a href="{% url 'organization_list' %}">Organizations</a>
                 <a href="{% url 'team_list' %}">Registrations</a>
             </div>
-            <a href="{% url 'tournament_create' %}" class="nav-cta">+ New Tournament</a>
+            <div style="display:flex; align-items:center; gap:10px; flex-shrink:0;">
+                <a href="{% url 'tournament_create' %}" class="nav-cta">+ New Tournament</a>
+                {% if user.is_authenticated %}
+                <form method="post" action="{% url 'logout' %}" style="margin:0;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-ghost btn-sm">Logout</button>
+                </form>
+                {% endif %}
+            </div>
         </div>
     </nav>
 
