@@ -1,71 +1,352 @@
 {% extends "base.html" %}
+{% block title %}Dashboard — Nexus{% endblock %}
 
-{% block title %}Dashboard{% endblock %}
+{% block extra_head %}
+<style>
+  /* ── COMMAND HEADER ── */
+  .cmd-header {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    flex-wrap: wrap; gap: 16px; margin-bottom: 32px;
+    padding-bottom: 20px; border-bottom: 1px solid var(--rim);
+  }
+  .cmd-eyebrow {
+    font-family: 'Space Mono', monospace; font-size: 0.6rem;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--amber); margin-bottom: 6px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .cmd-eyebrow::before { content:''; width:20px; height:1px; background:var(--amber); }
+  .cmd-title {
+    font-family: 'Rajdhani', sans-serif; font-size: 2.2rem;
+    font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--white); line-height: 1;
+  }
+  .cmd-meta { font-size: 0.82rem; color: var(--dim); margin-top: 4px; }
+
+  /* ── PLAN BANNER ── */
+  .plan-banner {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px;
+    background: var(--plate); border: 1px solid var(--rim);
+    border-left: 3px solid var(--amber);
+    border-radius: var(--radius-lg); padding: 16px 20px;
+    margin-bottom: 28px;
+  }
+  .plan-banner-left { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .plan-chip {
+    font-family: 'Space Mono', monospace; font-size: 0.62rem;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    background: var(--amber-bg); color: var(--amber);
+    border: 1px solid var(--amber-dim); border-radius: 4px;
+    padding: 4px 10px;
+  }
+  .plan-usage { font-size: 0.82rem; color: var(--pale); }
+  .plan-usage strong { color: var(--wire); }
+  .plan-bar-wrap {
+    width: 160px; height: 4px; background: var(--rim);
+    border-radius: 99px; overflow: hidden; flex-shrink: 0;
+  }
+  .plan-bar {
+    height: 100%; border-radius: 99px; background: var(--amber);
+    box-shadow: 0 0 8px var(--amber);
+    transition: width 1s cubic-bezier(0.16,1,0.3,1);
+  }
+
+  /* ── STAT STRIP ── */
+  .stat-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1px; background: var(--rim);
+    border: 1px solid var(--rim); border-radius: var(--radius-lg);
+    overflow: hidden; margin-bottom: 28px;
+  }
+  .strip-stat {
+    background: var(--plate); padding: 20px 22px;
+    position: relative; overflow: hidden;
+    transition: background 0.2s;
+  }
+  .strip-stat:hover { background: var(--panel); }
+  .strip-stat::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0;
+    height: 2px; background: transparent; transition: background 0.2s;
+  }
+  .strip-stat:hover::after { background: var(--amber); }
+  .strip-val {
+    font-family: 'Rajdhani', sans-serif; font-size: 2.4rem;
+    font-weight: 700; line-height: 1; color: var(--white);
+    letter-spacing: 0.02em;
+  }
+  .strip-val.green { color: #34d399; }
+  .strip-val.amber { color: var(--amber); }
+  .strip-val.muted { color: var(--dim); }
+  .strip-val.purple { color: #a78bfa; }
+  .strip-label {
+    font-family: 'Space Mono', monospace; font-size: 0.58rem;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--dim); margin-top: 5px;
+  }
+
+  /* ── TWO COL LAYOUT ── */
+  .dash-grid {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 20px;
+    align-items: start;
+  }
+  @media (max-width: 900px) { .dash-grid { grid-template-columns: 1fr; } }
+
+  /* ── TOURNAMENT CARDS ── */
+  .t-card {
+    display: flex; align-items: center; gap: 16px;
+    padding: 14px 18px;
+    border-bottom: 1px solid rgba(42,50,72,0.5);
+    transition: background 0.15s; cursor: default;
+    text-decoration: none;
+  }
+  .t-card:last-child { border-bottom: none; }
+  .t-card:hover { background: rgba(30,37,53,0.6); }
+  .t-card-dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+    box-shadow: 0 0 6px currentColor;
+  }
+  .dot-ongoing   { background: var(--amber);  color: var(--amber); }
+  .dot-draft     { background: var(--dim);    color: var(--dim); }
+  .dot-completed { background: #a78bfa;       color: #a78bfa; }
+  .dot-published { background: #60a5fa;       color: #60a5fa; }
+  .t-card-body { flex: 1; min-width: 0; }
+  .t-card-name {
+    font-family: 'Rajdhani', sans-serif; font-size: 0.95rem;
+    font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+    color: var(--wire); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .t-card-sub { font-size: 0.75rem; color: var(--dim); margin-top: 2px; }
+  .t-card-badge {
+    font-family: 'Space Mono', monospace; font-size: 0.56rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 3px; flex-shrink: 0;
+  }
+
+  /* ── SIDE PANEL ── */
+  .side-panel {
+    background: var(--plate); border: 1px solid var(--rim);
+    border-radius: var(--radius-lg); overflow: hidden;
+  }
+  .side-panel-head {
+    padding: 14px 18px; border-bottom: 1px solid var(--rim);
+    font-family: 'Space Mono', monospace; font-size: 0.62rem;
+    letter-spacing: 0.14em; text-transform: uppercase; color: var(--amber);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .side-panel-head::before { content:''; width:12px; height:1px; background:var(--amber); }
+
+  /* ── REG ITEM ── */
+  .reg-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 18px; border-bottom: 1px solid rgba(42,50,72,0.4);
+    font-size: 0.8rem;
+  }
+  .reg-row:last-child { border-bottom: none; }
+  .reg-count {
+    font-family: 'Rajdhani', sans-serif; font-size: 1.6rem;
+    font-weight: 700; color: var(--white); line-height: 1;
+  }
+  .reg-count.amber { color: var(--amber); }
+  .reg-count.green { color: #34d399; }
+  .reg-count.red   { color: #f87171; }
+
+  /* ── QUICK ACTIONS ── */
+  .quick-actions { display: flex; flex-direction: column; gap: 8px; padding: 16px; }
+  .quick-btn {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px; border-radius: var(--radius);
+    background: var(--panel); border: 1px solid var(--rim);
+    color: var(--pale); font-size: 0.82rem; font-family: 'Rajdhani', sans-serif;
+    font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+    text-decoration: none; transition: all 0.15s;
+  }
+  .quick-btn:hover { border-color: var(--amber); color: var(--amber); background: var(--amber-bg); }
+  .quick-btn-icon { font-size: 1rem; }
+
+  /* ── COUNTER ANIM ── */
+  .count-up { display: inline-block; }
+</style>
+{% endblock %}
 
 {% block content %}
-<h1>Dashboard</h1>
 
+{# ── COMMAND HEADER ── #}
+<div class="cmd-header">
+  <div>
+    <div class="cmd-eyebrow">Command Center</div>
+    <div class="cmd-title">Dashboard</div>
+    <div class="cmd-meta">Welcome back, {{ request.user.email }}</div>
+  </div>
+  <a href="{% url 'tournament_create' %}" class="btn btn-primary">+ New Tournament</a>
+</div>
+
+{# ── PLAN BANNER ── #}
 {% if plan_name %}
-<div class="card" style="margin-bottom: 1.5rem; border-left: 4px solid #6366f1;">
-    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-        <div>
-            <strong>Current Plan:</strong> {{ plan_name }}
-            &nbsp;|&nbsp;
-            <strong>Tournaments:</strong> {{ tournaments_used }} / {{ tournament_limit }} used
-            &nbsp;|&nbsp;
-            <strong>Slots remaining:</strong> {{ slots_remaining }}
-        </div>
-        {% if slots_remaining == 0 %}
-        <span style="color: #ef4444; font-weight: 600;">⚠ Limit reached — upgrade to create more tournaments</span>
-        {% elif slots_remaining <= 2 %}
-        <span style="color: #f59e0b; font-weight: 600;">⚠ Only {{ slots_remaining }} slot(s) left</span>
-        {% else %}
-        <span style="color: #22c55e; font-weight: 600;">✓ Active</span>
-        {% endif %}
-    </div>
+<div class="plan-banner">
+  <div class="plan-banner-left">
+    <span class="plan-chip">{{ plan_name }}</span>
+    <span class="plan-usage">
+      <strong>{{ tournaments_used }}</strong> / <strong>{{ tournament_limit }}</strong> tournaments used
+    </span>
+    {% if slots_remaining == 0 %}
+      <span style="color:#f87171; font-size:0.8rem; font-weight:600;">⚠ Limit reached — upgrade to create more</span>
+    {% elif slots_remaining <= 2 %}
+      <span style="color:var(--amber); font-size:0.8rem; font-weight:600;">⚠ Only {{ slots_remaining }} slot(s) remaining</span>
+    {% else %}
+      <span style="color:#34d399; font-size:0.8rem; font-weight:600;">✓ Active</span>
+    {% endif %}
+  </div>
+  {% if tournament_limit %}
+  <div class="plan-bar-wrap">
+    <div class="plan-bar" id="plan-bar"
+         data-pct="{% widthratio tournaments_used tournament_limit 100 %}"
+         style="width:0%"></div>
+  </div>
+  {% endif %}
 </div>
 {% endif %}
 
-<div class="stats-grid">
-    <div class="stat-card">
-        <div class="stat-number">{{ total_organizations }}</div>
-        <div class="stat-label">Organizations</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-number">{{ total_tournaments }}</div>
-        <div class="stat-label">Tournaments</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-number">{{ total_registrations }}</div>
-        <div class="stat-label">Registrations</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-number">{{ draft_tournaments }}</div>
-        <div class="stat-label">Draft</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-number">{{ ongoing_tournaments }}</div>
-        <div class="stat-label">Ongoing</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-number">{{ completed_tournaments }}</div>
-        <div class="stat-label">Completed</div>
-    </div>
+{# ── STAT STRIP ── #}
+<div class="stat-strip">
+  <div class="strip-stat">
+    <div class="strip-val count-up" data-target="{{ total_tournaments }}">0</div>
+    <div class="strip-label">Tournaments</div>
+  </div>
+  <div class="strip-stat">
+    <div class="strip-val green count-up" data-target="{{ ongoing_tournaments }}">0</div>
+    <div class="strip-label">Ongoing</div>
+  </div>
+  <div class="strip-stat">
+    <div class="strip-val amber count-up" data-target="{{ draft_tournaments }}">0</div>
+    <div class="strip-label">In Draft</div>
+  </div>
+  <div class="strip-stat">
+    <div class="strip-val purple count-up" data-target="{{ completed_tournaments }}">0</div>
+    <div class="strip-label">Completed</div>
+  </div>
+  <div class="strip-stat">
+    <div class="strip-val count-up" data-target="{{ total_registrations }}">0</div>
+    <div class="strip-label">Registrations</div>
+  </div>
+  <div class="strip-stat">
+    <div class="strip-val count-up" data-target="{{ total_organizations }}">0</div>
+    <div class="strip-label">Organizations</div>
+  </div>
 </div>
 
-<h2>Recent Tournaments</h2>
+{# ── MAIN GRID ── #}
+<div class="dash-grid">
 
-{% for tournament in recent_tournaments %}
-    <div class="card">
-        <h3>
-            <a href="{% url 'tournament_detail' tournament.id %}">{{ tournament.name }}</a>
-            <span class="badge badge-{{ tournament.status }}">{{ tournament.status }}</span>
-        </h3>
-        <p>{{ tournament.game_title }} &middot; {{ tournament.format_type }}</p>
+  {# LEFT — Recent Tournaments #}
+  <div>
+    <div class="section-header">
+      <h2 style="margin-bottom:0;">Recent Tournaments</h2>
+      <a href="{% url 'tournament_list' %}" class="btn btn-ghost btn-sm">View All →</a>
     </div>
-{% empty %}
-    <div class="card">
-        <p>No tournaments yet.</p>
+
+    <div class="table-wrap">
+      {% for t in recent_tournaments %}
+      <a href="{% url 'tournament_detail' t.id %}" class="t-card">
+        <div class="t-card-dot dot-{{ t.status }}"></div>
+        <div class="t-card-body">
+          <div class="t-card-name">{{ t.name }}</div>
+          <div class="t-card-sub">{{ t.game_title }} · {{ t.organization.name }}</div>
+        </div>
+        <span class="t-card-badge badge badge-{{ t.status }}">{{ t.status }}</span>
+      </a>
+      {% empty %}
+      <div class="empty-state" style="border:none;">
+        <div class="empty-state-icon">🏆</div>
+        <h3>No tournaments yet</h3>
+        <p>Create your first tournament to get started.</p>
+        <a href="{% url 'tournament_create' %}" class="btn btn-primary">Create Tournament</a>
+      </div>
+      {% endfor %}
     </div>
-{% endfor %}
+  </div>
+
+  {# RIGHT — Side Panels #}
+  <div style="display:flex; flex-direction:column; gap:16px;">
+
+    {# Registration Breakdown #}
+    <div class="side-panel">
+      <div class="side-panel-head">Registrations</div>
+      <div class="reg-row">
+        <div>
+          <div class="reg-count amber count-up" data-target="{{ pending_registrations }}">0</div>
+          <div style="font-family:'Space Mono',monospace; font-size:0.58rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--dim); margin-top:3px;">Pending</div>
+        </div>
+        <a href="{% url 'team_list' %}" class="btn btn-ghost btn-sm">Review →</a>
+      </div>
+      <div class="reg-row">
+        <div>
+          <div class="reg-count green count-up" data-target="{{ approved_registrations }}">0</div>
+          <div style="font-family:'Space Mono',monospace; font-size:0.58rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--dim); margin-top:3px;">Approved</div>
+        </div>
+      </div>
+      <div class="reg-row">
+        <div>
+          <div class="reg-count" style="color:var(--pale);">{{ total_registrations }}</div>
+          <div style="font-family:'Space Mono',monospace; font-size:0.58rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--dim); margin-top:3px;">Total</div>
+        </div>
+      </div>
+    </div>
+
+    {# Quick Actions #}
+    <div class="side-panel">
+      <div class="side-panel-head">Quick Actions</div>
+      <div class="quick-actions">
+        <a href="{% url 'tournament_create' %}" class="quick-btn">
+          <span class="quick-btn-icon">🏆</span> New Tournament
+        </a>
+        <a href="{% url 'organization_list' %}" class="quick-btn">
+          <span class="quick-btn-icon">🏢</span> Organizations
+        </a>
+        <a href="{% url 'team_list' %}" class="quick-btn">
+          <span class="quick-btn-icon">👥</span> Registrations
+        </a>
+        <a href="{% url 'tournament_list' %}" class="quick-btn">
+          <span class="quick-btn-icon">📋</span> All Tournaments
+        </a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+{# ── COUNTER + PLAN BAR ANIMATION ── #}
+<script>
+(function () {
+  function animCount(el, target, duration) {
+    let start = null;
+    function step(ts) {
+      if (!start) start = ts;
+      const p = Math.min((ts - start) / duration, 1);
+      const ease = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.floor(ease * target);
+      if (p < 1) requestAnimationFrame(step);
+      else el.textContent = target;
+    }
+    requestAnimationFrame(step);
+  }
+
+  // Animate all count-up elements
+  document.querySelectorAll('.count-up[data-target]').forEach((el, i) => {
+    const target = parseInt(el.dataset.target, 10) || 0;
+    setTimeout(() => animCount(el, target, 1200), i * 80);
+  });
+
+  // Animate plan bar
+  const bar = document.getElementById('plan-bar');
+  if (bar) {
+    const pct = parseInt(bar.dataset.pct, 10) || 0;
+    setTimeout(() => { bar.style.width = pct + '%'; }, 300);
+  }
+})();
+</script>
+
 {% endblock %}

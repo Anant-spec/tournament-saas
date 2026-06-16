@@ -37,6 +37,8 @@ def dashboard(request):
         "completed_tournaments": tournaments.filter(status="completed").count(),
         "draft_tournaments": tournaments.filter(status="draft").count(),
         "total_registrations": registrations.count(),
+        "pending_registrations": registrations.filter(status="pending").count(),
+        "approved_registrations": registrations.filter(status="approved").count(),
         "recent_tournaments": tournaments.order_by("-created_at")[:5],
         "plan_name": plan_name,
         "tournament_limit": tournament_limit,

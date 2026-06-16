@@ -1,19 +1,59 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Login</title>
-</head>
-<body>
-    <h1>Login</h1>
+{% extends "base.html" %}
+{% block title %}Log In — Nexus{% endblock %}
 
-    {% if form.errors %}
-        <p>Invalid username or password.</p>
-    {% endif %}
+{% block content %}
+<div style="min-height: 70vh; display: flex; align-items: center; justify-content: center; padding: 40px 20px;">
+  <div style="width: 100%; max-width: 440px;">
 
-    <form method="post">
+    <div style="text-align: center; margin-bottom: 32px;">
+      <div style="font-family:'Space Mono',monospace; font-size:0.62rem; letter-spacing:0.2em;
+                  text-transform:uppercase; color:var(--amber); margin-bottom:8px;">
+        Nexus Platform
+      </div>
+      <h1 style="font-family:'Rajdhani',sans-serif; font-size:2rem; font-weight:700;
+                 text-transform:uppercase; letter-spacing:0.06em; color:var(--white); margin-bottom:6px;">
+        Welcome Back
+      </h1>
+      <p style="font-size:0.85rem; color:var(--dim);">
+        Don't have an account?
+        <a href="{% url 'signup' %}" style="color:var(--amber); text-decoration:none;">Sign up →</a>
+      </p>
+    </div>
+
+    <div class="form-card">
+      {% if form.errors %}
+        <div class="alert alert-error" style="margin-bottom:20px;">
+          Invalid email or password. Please try again.
+        </div>
+      {% endif %}
+
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-{{ message.level_tag }}" style="margin-bottom:20px;">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      <form method="post" novalidate>
         {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Login</button>
-    </form>
-</body>
-</html>
+        {% for field in form %}
+          <p>
+            <label>{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}
+              <ul class="errorlist">
+                {% for error in field.errors %}<li>{{ error }}</li>{% endfor %}
+              </ul>
+            {% endif %}
+          </p>
+        {% endfor %}
+        <button type="submit" class="btn btn-primary" style="width:100%; margin-top:8px;">
+          Log In
+        </button>
+      </form>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

@@ -17,6 +17,21 @@
         </p>
     </div>
     <div class="btn-group">
+        {# Registration toggle — blocked after bracket exists #}
+        {% if not tournament.matches.exists %}
+        <form method="post" action="{% url 'toggle_registration' tournament.id %}" style="margin:0;">
+            {% csrf_token %}
+            {% if tournament.registration_open %}
+            <button type="submit" class="btn btn-danger btn-sm">🔒 Close Registration</button>
+            {% else %}
+            <button type="submit" class="btn btn-success btn-sm">🔓 Open Registration</button>
+            {% endif %}
+        </form>
+        {% else %}
+        <span class="btn btn-ghost btn-sm" style="cursor:default; opacity:0.5;">
+            {% if tournament.registration_open %}🔓 Open{% else %}🔒 Closed{% endif %}
+        </span>
+        {% endif %}
         <a href="{% url 'tournament_edit' tournament.id %}" class="btn btn-secondary">Edit</a>
         <a href="{% url 'tournament_delete' tournament.id %}" class="btn btn-danger">Delete</a>
         <a href="{% url 'tournament_list' %}" class="btn btn-ghost">← Back</a>

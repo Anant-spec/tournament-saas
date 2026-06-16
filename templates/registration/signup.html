@@ -1,39 +1,54 @@
 {% extends "base.html" %}
-
-{% block title %}Sign Up{% endblock %}
+{% block title %}Sign Up — Nexus{% endblock %}
 
 {% block content %}
-<div class="max-w-md mx-auto mt-10">
-  <h1 class="text-2xl font-bold mb-6">Create your account</h1>
+<div style="min-height: 70vh; display: flex; align-items: center; justify-content: center; padding: 40px 20px;">
+  <div style="width: 100%; max-width: 440px;">
 
-  <form method="post" novalidate>
-    {% csrf_token %}
+    <div style="text-align: center; margin-bottom: 32px;">
+      <div style="font-family:'Space Mono',monospace; font-size:0.62rem; letter-spacing:0.2em;
+                  text-transform:uppercase; color:var(--amber); margin-bottom:8px;">
+        Nexus Platform
+      </div>
+      <h1 style="font-family:'Rajdhani',sans-serif; font-size:2rem; font-weight:700;
+                 text-transform:uppercase; letter-spacing:0.06em; color:var(--white); margin-bottom:6px;">
+        Create Account
+      </h1>
+      <p style="font-size:0.85rem; color:var(--dim);">
+        Already have an account?
+        <a href="{% url 'login' %}" style="color:var(--amber); text-decoration:none;">Log in →</a>
+      </p>
+    </div>
 
-    {% if form.non_field_errors %}
-      <div class="text-red-600 mb-4">
-        {% for error in form.non_field_errors %}
-          <p>{{ error }}</p>
+    <div class="form-card">
+      {% if form.non_field_errors %}
+        <div class="alert alert-error" style="margin-bottom:20px;">
+          {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+        </div>
+      {% endif %}
+
+      <form method="post" novalidate>
+        {% csrf_token %}
+        {% for field in form %}
+          <p>
+            <label>{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}
+              <ul class="errorlist">
+                {% for error in field.errors %}<li>{{ error }}</li>{% endfor %}
+              </ul>
+            {% endif %}
+            {% if field.help_text %}
+              <span class="helptext">{{ field.help_text }}</span>
+            {% endif %}
+          </p>
         {% endfor %}
-      </div>
-    {% endif %}
+        <button type="submit" class="btn btn-primary" style="width:100%; margin-top:8px;">
+          Create Account
+        </button>
+      </form>
+    </div>
 
-    {% for field in form %}
-      <div class="mb-4">
-        <label class="block font-medium mb-1">{{ field.label }}</label>
-        {{ field }}
-        {% if field.errors %}
-          <p class="text-red-500 text-sm mt-1">{{ field.errors.0 }}</p>
-        {% endif %}
-      </div>
-    {% endfor %}
-
-    <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded">
-      Sign Up
-    </button>
-  </form>
-
-  <p class="mt-4 text-sm text-center">
-    Already have an account? <a href="{% url 'login' %}" class="text-blue-600">Log in</a>
-  </p>
+  </div>
 </div>
 {% endblock %}

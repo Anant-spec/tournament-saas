@@ -303,3 +303,27 @@ def report_match_result(request, match_id):
 
     messages.success(request, "Match result reported successfully.")
     return redirect("tournament_detail", pk=tournament.id)
+
+
+
+
+@login_required
+@require_POST
+def toggle_registration(request, pk):
+    tournament = get_object_or_404(
+        Tournament,
+        pk=pk,
+        organization__owner=request.user
+    )
+
+    # Block toggle after bracket is generated
+    if tournament.matches.exists():
+        messages.error(request, "Cannot change registration status after bracket has been generated.")
+        return redirect("tournament_detail", pk=tournament.pk)
+
+    tournament.registration_open = not tournament.registration_open
+    tournament.save(update_fields=["registration_open"])
+
+    state = "opened" if tournament.registration_open else "closed"
+    messages.success(request, f"Registration {state} for {tournament.name}.")
+    return redirect("tournament_detail", pk=tournament.pk)
