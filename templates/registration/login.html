@@ -1,4 +1,3 @@
-{% load django.contrib.messages %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -25,207 +24,110 @@
       font-size: 14px;
       display: flex;
     }
-
-    /* ── 3D CANVAS ── */
-    #arena-canvas {
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-    }
-
-    /* ── LAYOUT ── */
-    .auth-layout {
-      position: relative;
-      z-index: 10;
-      display: flex;
-      width: 100%;
-      min-height: 100vh;
-    }
-
-    /* Left panel — form */
+    #arena-canvas { position: fixed; inset: 0; z-index: 0; }
+    .auth-layout { position: relative; z-index: 10; display: flex; width: 100%; min-height: 100vh; }
     .auth-panel {
-      width: 480px;
-      flex-shrink: 0;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      padding: 48px 40px;
+      width: 480px; flex-shrink: 0; display: flex; flex-direction: column;
+      justify-content: center; padding: 48px 40px;
       background: rgba(11,13,16,0.82);
       backdrop-filter: blur(24px) saturate(1.4);
       -webkit-backdrop-filter: blur(24px) saturate(1.4);
-      border-right: 1px solid rgba(42,50,72,0.6);
-      overflow-y: auto;
+      border-right: 1px solid rgba(42,50,72,0.6); overflow-y: auto;
     }
-
-    /* Right side — canvas peeks through */
     .auth-scene {
-      flex: 1;
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      pointer-events: none;
+      flex: 1; position: relative; display: flex;
+      align-items: center; justify-content: center; pointer-events: none;
     }
-
     .scene-label {
       font-family: 'Rajdhani', sans-serif;
-      font-size: clamp(2.2rem, 5vw, 4.5rem);
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.14em;
-      color: rgba(240,244,255,0.06);
-      text-align: center;
-      line-height: 1.1;
-      user-select: none;
-      pointer-events: none;
+      font-size: clamp(2.2rem, 5vw, 4.5rem); font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.14em;
+      color: rgba(240,244,255,0.06); text-align: center;
+      line-height: 1.1; user-select: none;
     }
-
-    /* ── BRAND ── */
     .brand {
-      font-family: 'Rajdhani', sans-serif;
-      font-size: 1.1rem;
-      font-weight: 700;
-      letter-spacing: 0.14em;
-      color: var(--amber);
-      text-transform: uppercase;
-      margin-bottom: 36px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
+      font-family: 'Rajdhani', sans-serif; font-size: 1.1rem; font-weight: 700;
+      letter-spacing: 0.14em; color: var(--amber); text-transform: uppercase;
+      margin-bottom: 36px; display: flex; align-items: center; gap: 10px;
     }
     .brand-icon {
-      width: 32px; height: 32px;
-      background: var(--amber-bg);
-      border: 1px solid rgba(245,158,11,0.3);
-      border-radius: var(--radius-sm);
+      width: 32px; height: 32px; background: var(--amber-bg);
+      border: 1px solid rgba(245,158,11,0.3); border-radius: var(--radius-sm);
       display: flex; align-items: center; justify-content: center;
     }
-
-    /* ── HEADING ── */
     .auth-eyebrow {
-      font-family: 'Space Mono', monospace;
-      font-size: 0.6rem;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: var(--amber);
-      margin-bottom: 8px;
+      font-family: 'Space Mono', monospace; font-size: 0.6rem;
+      letter-spacing: 0.22em; text-transform: uppercase;
+      color: var(--amber); margin-bottom: 8px;
     }
     .auth-title {
-      font-family: 'Rajdhani', sans-serif;
-      font-size: 2.2rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      color: var(--white);
-      line-height: 1.1;
-      margin-bottom: 6px;
+      font-family: 'Rajdhani', sans-serif; font-size: 2.2rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.04em;
+      color: var(--white); line-height: 1.1; margin-bottom: 6px;
     }
-    .auth-sub {
-      font-size: 0.84rem;
-      color: var(--dim);
-      margin-bottom: 32px;
-    }
+    .auth-sub { font-size: 0.84rem; color: var(--dim); margin-bottom: 32px; }
     .auth-sub a { color: var(--amber); text-decoration: none; }
     .auth-sub a:hover { text-decoration: underline; }
-
-    /* ── FORM ── */
     .field { margin-bottom: 18px; }
     .field label {
-      display: block;
-      font-family: 'Space Mono', monospace;
-      font-size: 0.6rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--pale);
-      margin-bottom: 7px;
+      display: block; font-family: 'Space Mono', monospace; font-size: 0.6rem;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--pale); margin-bottom: 7px;
     }
     .field input {
-      width: 100%;
-      min-height: 44px;
-      padding: 10px 14px;
-      background: rgba(30,37,53,0.7);
-      border: 1px solid var(--rim);
-      border-radius: var(--radius);
-      color: var(--white);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.92rem;
-      transition: border-color 0.18s, box-shadow 0.18s;
-      outline: none;
+      width: 100%; min-height: 44px; padding: 10px 14px;
+      background: rgba(30,37,53,0.7); border: 1px solid var(--rim);
+      border-radius: var(--radius); color: var(--white);
+      font-family: 'DM Sans', sans-serif; font-size: 0.92rem;
+      transition: border-color 0.18s, box-shadow 0.18s; outline: none;
     }
-    .field input:focus {
-      border-color: var(--amber);
-      box-shadow: 0 0 0 3px rgba(245,158,11,0.12);
-    }
+    .field input:focus { border-color: var(--amber); box-shadow: 0 0 0 3px rgba(245,158,11,0.12); }
     .field input::placeholder { color: var(--ghost); }
     .errorlist { list-style: none; margin-top: 5px; }
     .errorlist li { color: #f87171; font-size: 0.76rem; }
-
-    /* ── SUBMIT ── */
+    .form-error {
+      background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.22);
+      border-radius: var(--radius); padding: 10px 14px;
+      color: #f87171; font-size: 0.82rem; margin-bottom: 20px;
+    }
     .btn-auth {
-      width: 100%;
-      min-height: 46px;
-      padding: 12px;
-      background: var(--amber);
-      color: var(--ink);
-      border: none;
-      border-radius: var(--radius);
-      font-family: 'Rajdhani', sans-serif;
-      font-size: 0.9rem;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: background 0.15s, transform 0.12s;
-      margin-top: 8px;
+      width: 100%; min-height: 46px; padding: 12px;
+      background: var(--amber); color: var(--ink); border: none;
+      border-radius: var(--radius); font-family: 'Rajdhani', sans-serif;
+      font-size: 0.9rem; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; cursor: pointer;
+      transition: background 0.15s, transform 0.12s; margin-top: 8px;
     }
     .btn-auth:hover { background: var(--amber-hot); transform: translateY(-1px); }
     .btn-auth:active { transform: translateY(0); }
-
-    /* ── INLINE ERROR ── */
-    .form-error {
-      background: rgba(239,68,68,0.08);
-      border: 1px solid rgba(239,68,68,0.22);
-      border-radius: var(--radius);
-      padding: 10px 14px;
-      color: #f87171;
-      font-size: 0.82rem;
-      margin-bottom: 20px;
-    }
-
-    /* ── TOAST ── */
     #toast-container {
-      position: fixed; bottom: 24px; right: 24px;
-      z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none;
+      position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+      display: flex; flex-direction: column; gap: 10px; pointer-events: none;
     }
     .toast {
       display: flex; align-items: flex-start; gap: 10px;
-      min-width: 260px; max-width: 360px;
-      padding: 12px 14px;
-      border-radius: var(--radius);
-      border: 1px solid transparent;
-      font-size: 0.84rem; font-weight: 500;
-      pointer-events: all;
+      min-width: 260px; max-width: 360px; padding: 12px 14px;
+      border-radius: var(--radius); border: 1px solid transparent;
+      font-size: 0.84rem; font-weight: 500; pointer-events: all;
       position: relative; overflow: hidden;
       transform: translateX(120%); opacity: 0;
-      transition: transform 0.32s cubic-bezier(0.16,1,0.3,1), opacity 0.32s ease;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+      transition: transform .32s cubic-bezier(.16,1,.3,1), opacity .32s ease;
+      box-shadow: 0 8px 24px rgba(0,0,0,.45);
     }
-    .toast.show { transform: translateX(0); opacity: 1; }
-    .toast.hide { transform: translateX(120%); opacity: 0; }
-    .toast-close { flex-shrink:0; background:none; border:none; color:inherit; opacity:.45; cursor:pointer; font-size:1rem; transition: opacity .15s; }
-    .toast-close:hover { opacity:.9; }
-    .toast-progress { position:absolute; bottom:0; left:0; height:2px; border-radius:0 0 var(--radius) var(--radius); width:100%; transform-origin:left; animation: tdrain 4s linear forwards; }
-    @keyframes tdrain { from{transform:scaleX(1)} to{transform:scaleX(0)} }
-    .toast-success { background:#0e2820; color:#34d399; border-color:rgba(16,185,129,.25); }
-    .toast-success .toast-progress { background:#10b981; }
-    .toast-error   { background:#250f0f; color:#f87171; border-color:rgba(239,68,68,.25); }
-    .toast-error   .toast-progress { background:#ef4444; }
-    .toast-warning { background:#1f1506; color:var(--amber); border-color:rgba(245,158,11,.25); }
-    .toast-warning .toast-progress { background:var(--amber); }
-    .toast-info    { background:#0d1729; color:#60a5fa; border-color:rgba(59,130,246,.25); }
-    .toast-info    .toast-progress { background:#3b82f6; }
-
-    /* ── RESPONSIVE ── */
+    .toast.show{transform:translateX(0);opacity:1}
+    .toast.hide{transform:translateX(120%);opacity:0}
+    .toast-close{flex-shrink:0;background:none;border:none;color:inherit;opacity:.45;cursor:pointer;font-size:1rem;transition:opacity .15s}
+    .toast-close:hover{opacity:.9}
+    .toast-progress{position:absolute;bottom:0;left:0;height:2px;border-radius:0 0 var(--radius) var(--radius);width:100%;transform-origin:left;animation:tdrain 4s linear forwards}
+    @keyframes tdrain{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+    .toast-success{background:#0e2820;color:#34d399;border-color:rgba(16,185,129,.25)}
+    .toast-success .toast-progress{background:#10b981}
+    .toast-error{background:#250f0f;color:#f87171;border-color:rgba(239,68,68,.25)}
+    .toast-error .toast-progress{background:#ef4444}
+    .toast-warning{background:#1f1506;color:var(--amber);border-color:rgba(245,158,11,.25)}
+    .toast-warning .toast-progress{background:var(--amber)}
+    .toast-info{background:#0d1729;color:#60a5fa;border-color:rgba(59,130,246,.25)}
+    .toast-info .toast-progress{background:#3b82f6}
     @media (max-width: 768px) {
       html, body { overflow: auto; }
       .auth-layout { flex-direction: column; min-height: 100svh; }
@@ -235,11 +137,8 @@
   </style>
 </head>
 <body>
-
 <canvas id="arena-canvas"></canvas>
-
 <div class="auth-layout">
-  <!-- FORM PANEL -->
   <aside class="auth-panel">
     <div class="brand">
       <div class="brand-icon">
@@ -250,18 +149,12 @@
       </div>
       NEX<span style="color:var(--pale)">US</span>
     </div>
-
     <div class="auth-eyebrow">Tournament Platform</div>
     <h1 class="auth-title">Welcome<br>Back</h1>
-    <p class="auth-sub">
-      No account yet?
-      <a href="{% url 'signup' %}">Sign up →</a>
-    </p>
-
+    <p class="auth-sub">No account yet? <a href="{% url 'signup' %}">Sign up →</a></p>
     {% if form.errors %}
     <div class="form-error">Invalid credentials. Please try again.</div>
     {% endif %}
-
     <form method="post" novalidate>
       {% csrf_token %}
       {% for field in form %}
@@ -276,222 +169,105 @@
       <button type="submit" class="btn-auth">Enter the Arena</button>
     </form>
   </aside>
-
-  <!-- 3D SCENE SIDE -->
   <div class="auth-scene">
     <div class="scene-label">NEXUS<br>ARENA</div>
   </div>
 </div>
-
-<!-- Toast container -->
 <div id="toast-container" aria-live="polite"></div>
 {% if messages %}
 <script id="django-messages" type="application/json">
 [{% for m in messages %}{"level":"{{ m.level_tag }}","text":"{{ m|escapejs }}"}{% if not forloop.last %},{% endif %}{% endfor %}]
 </script>
 {% endif %}
-
-<!-- THREE.JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
 <script>
 (function () {
-  /* ── THREE.JS ARENA SCENE ── */
   const canvas = document.getElementById('arena-canvas');
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setClearColor(0x0b0d10, 1);
-
   const scene = new THREE.Scene();
   scene.fog = new THREE.FogExp2(0x0b0d10, 0.032);
-
   const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 200);
   camera.position.set(0, 6, 20);
   camera.lookAt(0, 0, 0);
-
-  /* Grid floor */
-  const gridHelper = new THREE.GridHelper(80, 40, 0x2a3248, 0x1e2535);
-  scene.add(gridHelper);
-
-  /* Ambient + directional light */
+  scene.add(new THREE.GridHelper(80, 40, 0x2a3248, 0x1e2535));
   scene.add(new THREE.AmbientLight(0x1a2040, 1.5));
   const sunLight = new THREE.DirectionalLight(0xf59e0b, 1.2);
-  sunLight.position.set(10, 20, 10);
-  scene.add(sunLight);
-
+  sunLight.position.set(10, 20, 10); scene.add(sunLight);
   const rimLight = new THREE.DirectionalLight(0x22d3ee, 0.4);
-  rimLight.position.set(-15, 8, -10);
-  scene.add(rimLight);
-
-  /* ── FLOATING TOURNAMENT BRACKETS ── */
-  const bracketGroup = new THREE.Group();
-  scene.add(bracketGroup);
-
-  const amberMat = new THREE.MeshStandardMaterial({
-    color: 0xf59e0b, emissive: 0xf59e0b, emissiveIntensity: 0.35,
-    metalness: 0.6, roughness: 0.3
-  });
-  const dimMat = new THREE.MeshStandardMaterial({
-    color: 0x3a4560, emissive: 0x1e2535, emissiveIntensity: 0.2,
-    metalness: 0.7, roughness: 0.4
-  });
-  const cyanMat = new THREE.MeshStandardMaterial({
-    color: 0x22d3ee, emissive: 0x22d3ee, emissiveIntensity: 0.25,
-    metalness: 0.5, roughness: 0.4
-  });
-
-  function makeNode(mat, radius) {
-    const geo = new THREE.OctahedronGeometry(radius || 0.22, 0);
-    return new THREE.Mesh(geo, mat);
-  }
-
+  rimLight.position.set(-15, 8, -10); scene.add(rimLight);
+  const bracketGroup = new THREE.Group(); scene.add(bracketGroup);
+  const amberMat = new THREE.MeshStandardMaterial({ color:0xf59e0b, emissive:0xf59e0b, emissiveIntensity:0.35, metalness:0.6, roughness:0.3 });
+  const dimMat   = new THREE.MeshStandardMaterial({ color:0x3a4560, emissive:0x1e2535, emissiveIntensity:0.2,  metalness:0.7, roughness:0.4 });
+  const cyanMat  = new THREE.MeshStandardMaterial({ color:0x22d3ee, emissive:0x22d3ee, emissiveIntensity:0.25, metalness:0.5, roughness:0.4 });
+  function makeNode(mat, r) { return new THREE.Mesh(new THREE.OctahedronGeometry(r||0.22,0), mat); }
   function makeConnector(from, to, mat) {
     const dir = new THREE.Vector3().subVectors(to, from);
     const len = dir.length();
     const mid = new THREE.Vector3().addVectors(from, to).multiplyScalar(0.5);
-    const geo = new THREE.CylinderGeometry(0.025, 0.025, len, 5);
-    const mesh = new THREE.Mesh(geo, mat);
+    const mesh = new THREE.Mesh(new THREE.CylinderGeometry(0.025,0.025,len,5), mat);
     mesh.position.copy(mid);
     mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), dir.normalize());
     return mesh;
   }
-
-  /* Build a mini bracket tree */
   function buildBracket(ox, oy, oz, scale, highlight) {
-    const g = new THREE.Group();
-    g.position.set(ox, oy, oz);
-
-    const s = scale || 1;
+    const g = new THREE.Group(); g.position.set(ox, oy, oz);
+    const s = scale||1;
     const hmat = highlight ? amberMat : dimMat;
-    const cmat = new THREE.MeshStandardMaterial({
-      color: 0x6b7a99, emissive: 0x2a3248, emissiveIntensity: 0.1,
-      metalness: 0.5, roughness: 0.5
-    });
-
-    /* Positions: round1 left, round1 right, semi, final */
+    const cmat = new THREE.MeshStandardMaterial({ color:0x6b7a99, emissive:0x2a3248, emissiveIntensity:0.1, metalness:0.5, roughness:0.5 });
     const pos = [
-      new THREE.Vector3(-1.6*s, 1*s, 0),
-      new THREE.Vector3(-1.6*s,-1*s, 0),
-      new THREE.Vector3(-0.4*s, 0*s, 0),
-      new THREE.Vector3( 0.8*s, 0*s, 0),
-      new THREE.Vector3( 1.6*s, 0.8*s, 0),
-      new THREE.Vector3( 1.6*s,-0.8*s, 0),
+      new THREE.Vector3(-1.6*s, 1*s,0), new THREE.Vector3(-1.6*s,-1*s,0),
+      new THREE.Vector3(-0.4*s, 0*s,0), new THREE.Vector3( 0.8*s, 0*s,0),
+      new THREE.Vector3( 1.6*s, 0.8*s,0), new THREE.Vector3( 1.6*s,-0.8*s,0),
     ];
-
-    const pairs = [[0,2],[1,2],[2,3],[4,3],[5,3]];
-    pairs.forEach(([a,b]) => g.add(makeConnector(pos[a], pos[b], cmat)));
-    pos.forEach((p, i) => {
-      const node = makeNode(i === 3 ? hmat : (i < 2 ? dimMat : cyanMat), i === 3 ? 0.28*s : 0.18*s);
-      node.position.copy(p);
-      g.add(node);
-    });
+    [[0,2],[1,2],[2,3],[4,3],[5,3]].forEach(([a,b]) => g.add(makeConnector(pos[a],pos[b],cmat)));
+    pos.forEach((p,i) => { const n=makeNode(i===3?hmat:(i<2?dimMat:cyanMat),i===3?0.28*s:0.18*s); n.position.copy(p); g.add(n); });
     return g;
   }
-
-  /* Scatter multiple brackets across the scene */
   const brackets = [
-    buildBracket( 0,  3, -8,  1.2, true),
-    buildBracket( 8,  1, -14, 0.9, false),
-    buildBracket(-9,  2, -12, 0.8, false),
-    buildBracket( 5, -1, -20, 1.1, false),
-    buildBracket(-5,  4, -22, 0.7, true),
-    buildBracket(14,  3, -18, 0.6, false),
+    buildBracket(0,3,-8,1.2,true), buildBracket(8,1,-14,0.9,false),
+    buildBracket(-9,2,-12,0.8,false), buildBracket(5,-1,-20,1.1,false),
+    buildBracket(-5,4,-22,0.7,true), buildBracket(14,3,-18,0.6,false),
   ];
   brackets.forEach(b => bracketGroup.add(b));
-
-  /* ── PARTICLES ── */
-  const particleCount = 420;
+  const pCount = 420;
   const pGeo = new THREE.BufferGeometry();
-  const pPos = new Float32Array(particleCount * 3);
-  const pVel = new Float32Array(particleCount * 3);
-  for (let i = 0; i < particleCount; i++) {
-    pPos[i*3]   = (Math.random() - 0.5) * 80;
-    pPos[i*3+1] = Math.random() * 30 - 2;
-    pPos[i*3+2] = (Math.random() - 0.5) * 60 - 10;
-    pVel[i*3]   = (Math.random() - 0.5) * 0.008;
-    pVel[i*3+1] = Math.random() * 0.006 + 0.002;
-    pVel[i*3+2] = (Math.random() - 0.5) * 0.006;
+  const pPos = new Float32Array(pCount*3), pVel = new Float32Array(pCount*3);
+  for (let i=0;i<pCount;i++) {
+    pPos[i*3]=(Math.random()-0.5)*80; pPos[i*3+1]=Math.random()*30-2; pPos[i*3+2]=(Math.random()-0.5)*60-10;
+    pVel[i*3]=(Math.random()-0.5)*0.008; pVel[i*3+1]=Math.random()*0.006+0.002; pVel[i*3+2]=(Math.random()-0.5)*0.006;
   }
-  pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
-  const pMat = new THREE.PointsMaterial({ color: 0xf59e0b, size: 0.12, transparent: true, opacity: 0.55 });
-  const particles = new THREE.Points(pGeo, pMat);
-  scene.add(particles);
-
-  /* ── MOUSE PARALLAX ── */
-  let mouseX = 0, mouseY = 0;
-  document.addEventListener('mousemove', e => {
-    mouseX = (e.clientX / window.innerWidth  - 0.5) * 2;
-    mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
-  });
-
-  /* ── ANIMATE ── */
-  let t = 0;
-  function animate() {
-    requestAnimationFrame(animate);
-    t += 0.008;
-
-    /* Rotate each bracket slowly */
-    brackets.forEach((b, i) => {
-      b.rotation.y = Math.sin(t * 0.4 + i * 1.2) * 0.35;
-      b.rotation.x = Math.cos(t * 0.25 + i * 0.8) * 0.12;
-      b.position.y = b.position.y + Math.sin(t * 0.6 + i) * 0.0008;
-    });
-
-    /* Float particles up, reset when too high */
-    for (let i = 0; i < particleCount; i++) {
-      pPos[i*3]   += pVel[i*3];
-      pPos[i*3+1] += pVel[i*3+1];
-      pPos[i*3+2] += pVel[i*3+2];
-      if (pPos[i*3+1] > 28) {
-        pPos[i*3+1] = -2;
-        pPos[i*3]   = (Math.random() - 0.5) * 80;
-      }
-    }
-    pGeo.attributes.position.needsUpdate = true;
-
-    /* Camera parallax */
-    camera.position.x += (mouseX * 2.5 - camera.position.x) * 0.04;
-    camera.position.y += (-mouseY * 1.5 + 6 - camera.position.y) * 0.04;
-    camera.lookAt(0, 2, 0);
-
-    /* Slowly pan the whole bracket group */
-    bracketGroup.rotation.y = t * 0.04;
-
-    renderer.render(scene, camera);
-  }
-  animate();
-
-  /* Resize */
-  window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-  });
-
-  /* ── TOASTS ── */
-  const ICONS = { success: '✓', error: '✕', warning: '⚠', info: 'ℹ' };
-  function showToast(level, text) {
-    const el = document.createElement('div');
-    el.className = 'toast toast-' + (level || 'info');
-    el.setAttribute('role', 'alert');
-    el.innerHTML =
-      '<span>' + (ICONS[level]||'ℹ') + '</span>' +
-      '<span style="flex:1">' + text + '</span>' +
-      '<button class="toast-close" aria-label="Dismiss">&times;</button>' +
-      '<div class="toast-progress"></div>';
+  pGeo.setAttribute('position', new THREE.BufferAttribute(pPos,3));
+  scene.add(new THREE.Points(pGeo, new THREE.PointsMaterial({color:0xf59e0b,size:0.12,transparent:true,opacity:0.55})));
+  let mouseX=0, mouseY=0;
+  document.addEventListener('mousemove', e => { mouseX=(e.clientX/window.innerWidth-0.5)*2; mouseY=(e.clientY/window.innerHeight-0.5)*2; });
+  let t=0;
+  (function animate() {
+    requestAnimationFrame(animate); t+=0.008;
+    brackets.forEach((b,i) => { b.rotation.y=Math.sin(t*0.4+i*1.2)*0.35; b.rotation.x=Math.cos(t*0.25+i*0.8)*0.12; });
+    for (let i=0;i<pCount;i++) { pPos[i*3]+=pVel[i*3]; pPos[i*3+1]+=pVel[i*3+1]; pPos[i*3+2]+=pVel[i*3+2]; if(pPos[i*3+1]>28){pPos[i*3+1]=-2;pPos[i*3]=(Math.random()-0.5)*80;} }
+    pGeo.attributes.position.needsUpdate=true;
+    camera.position.x+=(mouseX*2.5-camera.position.x)*0.04;
+    camera.position.y+=(-mouseY*1.5+6-camera.position.y)*0.04;
+    camera.lookAt(0,2,0);
+    bracketGroup.rotation.y=t*0.04;
+    renderer.render(scene,camera);
+  })();
+  window.addEventListener('resize',()=>{ camera.aspect=window.innerWidth/window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth,window.innerHeight); });
+  const ICONS={success:'✓',error:'✕',warning:'⚠',info:'ℹ'};
+  function showToast(level,text) {
+    const el=document.createElement('div'); el.className='toast toast-'+(level||'info'); el.setAttribute('role','alert');
+    el.innerHTML='<span>'+(ICONS[level]||'ℹ')+'</span><span style="flex:1">'+text+'</span><button class="toast-close" aria-label="Dismiss">&times;</button><div class="toast-progress"></div>';
     document.getElementById('toast-container').appendChild(el);
-    requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('show')));
-    const dismiss = () => {
-      el.classList.add('hide');
-      el.addEventListener('transitionend', () => el.remove(), { once: true });
-    };
-    el.querySelector('.toast-close').addEventListener('click', dismiss);
-    setTimeout(dismiss, 4000);
+    requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('show')));
+    const dismiss=()=>{el.classList.add('hide');el.addEventListener('transitionend',()=>el.remove(),{once:true})};
+    el.querySelector('.toast-close').addEventListener('click',dismiss); setTimeout(dismiss,4000);
   }
-  const seed = document.getElementById('django-messages');
-  if (seed) { try { JSON.parse(seed.textContent).forEach(m => showToast(m.level, m.text)); } catch(e){} }
-  window.Toasts = { show: showToast };
-
+  const seed=document.getElementById('django-messages');
+  if(seed){try{JSON.parse(seed.textContent).forEach(m=>showToast(m.level,m.text));}catch(e){}}
+  window.Toasts={show:showToast};
 })();
 </script>
 </body>

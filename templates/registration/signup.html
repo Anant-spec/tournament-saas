@@ -1,4 +1,3 @@
-{% load django.contrib.messages %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -18,211 +17,62 @@
       --radius-sm: 6px; --radius: 10px; --radius-lg: 14px;
     }
     html, body { height: 100%; }
-    body {
-      font-family: 'DM Sans', sans-serif;
-      background: #0b0d10;
-      color: var(--wire);
-      font-size: 14px;
-      display: flex;
-    }
-    #arena-canvas {
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-    }
-    .auth-layout {
-      position: relative;
-      z-index: 10;
-      display: flex;
-      width: 100%;
-      min-height: 100vh;
-    }
-    /* Right side for signup (scene left, form right) */
-    .auth-scene {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      pointer-events: none;
-    }
+    body { font-family:'DM Sans',sans-serif; background:#0b0d10; color:var(--wire); font-size:14px; display:flex; }
+    #arena-canvas { position:fixed; inset:0; z-index:0; }
+    .auth-layout { position:relative; z-index:10; display:flex; width:100%; min-height:100vh; }
+    .auth-scene { flex:1; display:flex; align-items:center; justify-content:center; pointer-events:none; }
     .scene-label {
-      font-family: 'Rajdhani', sans-serif;
-      font-size: clamp(2.2rem, 5vw, 4.5rem);
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.14em;
-      color: rgba(240,244,255,0.055);
-      text-align: center;
-      line-height: 1.1;
-      user-select: none;
+      font-family:'Rajdhani',sans-serif; font-size:clamp(2.2rem,5vw,4.5rem); font-weight:700;
+      text-transform:uppercase; letter-spacing:0.14em; color:rgba(240,244,255,0.055);
+      text-align:center; line-height:1.1; user-select:none;
     }
     .auth-panel {
-      width: 500px;
-      flex-shrink: 0;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      padding: 40px 40px;
-      background: rgba(11,13,16,0.82);
-      backdrop-filter: blur(24px) saturate(1.4);
-      -webkit-backdrop-filter: blur(24px) saturate(1.4);
-      border-left: 1px solid rgba(42,50,72,0.6);
-      overflow-y: auto;
-      min-height: 100vh;
+      width:500px; flex-shrink:0; display:flex; flex-direction:column; justify-content:center;
+      padding:40px; background:rgba(11,13,16,0.82);
+      backdrop-filter:blur(24px) saturate(1.4); -webkit-backdrop-filter:blur(24px) saturate(1.4);
+      border-left:1px solid rgba(42,50,72,0.6); overflow-y:auto; min-height:100vh;
     }
-    .brand {
-      font-family: 'Rajdhani', sans-serif;
-      font-size: 1.1rem;
-      font-weight: 700;
-      letter-spacing: 0.14em;
-      color: var(--amber);
-      text-transform: uppercase;
-      margin-bottom: 32px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .brand-icon {
-      width: 32px; height: 32px;
-      background: var(--amber-bg);
-      border: 1px solid rgba(245,158,11,0.3);
-      border-radius: var(--radius-sm);
-      display: flex; align-items: center; justify-content: center;
-    }
-    .auth-eyebrow {
-      font-family: 'Space Mono', monospace;
-      font-size: 0.6rem;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: var(--amber);
-      margin-bottom: 8px;
-    }
-    .auth-title {
-      font-family: 'Rajdhani', sans-serif;
-      font-size: 2.2rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      color: var(--white);
-      line-height: 1.1;
-      margin-bottom: 6px;
-    }
-    .auth-sub {
-      font-size: 0.84rem;
-      color: var(--dim);
-      margin-bottom: 28px;
-    }
-    .auth-sub a { color: var(--amber); text-decoration: none; }
-    .auth-sub a:hover { text-decoration: underline; }
-    .field { margin-bottom: 16px; }
-    .field label {
-      display: block;
-      font-family: 'Space Mono', monospace;
-      font-size: 0.6rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--pale);
-      margin-bottom: 7px;
-    }
-    .field input {
-      width: 100%;
-      min-height: 44px;
-      padding: 10px 14px;
-      background: rgba(30,37,53,0.7);
-      border: 1px solid var(--rim);
-      border-radius: var(--radius);
-      color: var(--white);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.92rem;
-      transition: border-color 0.18s, box-shadow 0.18s;
-      outline: none;
-    }
-    .field input:focus {
-      border-color: var(--amber);
-      box-shadow: 0 0 0 3px rgba(245,158,11,0.12);
-    }
-    .field input::placeholder { color: var(--ghost); }
-    .helptext { font-size: 0.72rem; color: var(--dim); margin-top: 4px; display: block; }
-    .errorlist { list-style: none; margin-top: 5px; }
-    .errorlist li { color: #f87171; font-size: 0.76rem; }
-    .form-error {
-      background: rgba(239,68,68,0.08);
-      border: 1px solid rgba(239,68,68,0.22);
-      border-radius: var(--radius);
-      padding: 10px 14px;
-      color: #f87171;
-      font-size: 0.82rem;
-      margin-bottom: 18px;
-    }
-    .btn-auth {
-      width: 100%;
-      min-height: 46px;
-      padding: 12px;
-      background: var(--amber);
-      color: var(--ink);
-      border: none;
-      border-radius: var(--radius);
-      font-family: 'Rajdhani', sans-serif;
-      font-size: 0.9rem;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: background 0.15s, transform 0.12s;
-      margin-top: 6px;
-    }
-    .btn-auth:hover { background: var(--amber-hot); transform: translateY(-1px); }
-    .btn-auth:active { transform: translateY(0); }
-
-    /* Toasts */
-    #toast-container {
-      position:fixed; bottom:24px; right:24px; z-index:9999;
-      display:flex; flex-direction:column; gap:10px; pointer-events:none;
-    }
-    .toast {
-      display:flex; align-items:flex-start; gap:10px;
-      min-width:260px; max-width:360px;
-      padding:12px 14px; border-radius:var(--radius);
-      border:1px solid transparent; font-size:0.84rem; font-weight:500;
-      pointer-events:all; position:relative; overflow:hidden;
-      transform:translateX(120%); opacity:0;
-      transition:transform .32s cubic-bezier(.16,1,.3,1), opacity .32s ease;
-      box-shadow:0 8px 24px rgba(0,0,0,.45);
-    }
-    .toast.show{transform:translateX(0);opacity:1}
-    .toast.hide{transform:translateX(120%);opacity:0}
-    .toast-close{flex-shrink:0;background:none;border:none;color:inherit;opacity:.45;cursor:pointer;font-size:1rem;transition:opacity .15s}
-    .toast-close:hover{opacity:.9}
+    .brand { font-family:'Rajdhani',sans-serif; font-size:1.1rem; font-weight:700; letter-spacing:0.14em; color:var(--amber); text-transform:uppercase; margin-bottom:32px; display:flex; align-items:center; gap:10px; }
+    .brand-icon { width:32px; height:32px; background:var(--amber-bg); border:1px solid rgba(245,158,11,0.3); border-radius:var(--radius-sm); display:flex; align-items:center; justify-content:center; }
+    .auth-eyebrow { font-family:'Space Mono',monospace; font-size:0.6rem; letter-spacing:0.22em; text-transform:uppercase; color:var(--amber); margin-bottom:8px; }
+    .auth-title { font-family:'Rajdhani',sans-serif; font-size:2.2rem; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:var(--white); line-height:1.1; margin-bottom:6px; }
+    .auth-sub { font-size:0.84rem; color:var(--dim); margin-bottom:28px; }
+    .auth-sub a { color:var(--amber); text-decoration:none; }
+    .auth-sub a:hover { text-decoration:underline; }
+    .field { margin-bottom:16px; }
+    .field label { display:block; font-family:'Space Mono',monospace; font-size:0.6rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--pale); margin-bottom:7px; }
+    .field input { width:100%; min-height:44px; padding:10px 14px; background:rgba(30,37,53,0.7); border:1px solid var(--rim); border-radius:var(--radius); color:var(--white); font-family:'DM Sans',sans-serif; font-size:0.92rem; transition:border-color .18s,box-shadow .18s; outline:none; }
+    .field input:focus { border-color:var(--amber); box-shadow:0 0 0 3px rgba(245,158,11,0.12); }
+    .field input::placeholder { color:var(--ghost); }
+    .helptext { font-size:0.72rem; color:var(--dim); margin-top:4px; display:block; }
+    .errorlist { list-style:none; margin-top:5px; }
+    .errorlist li { color:#f87171; font-size:0.76rem; }
+    .form-error { background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.22); border-radius:var(--radius); padding:10px 14px; color:#f87171; font-size:0.82rem; margin-bottom:18px; }
+    .btn-auth { width:100%; min-height:46px; padding:12px; background:var(--amber); color:var(--ink); border:none; border-radius:var(--radius); font-family:'Rajdhani',sans-serif; font-size:0.9rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; cursor:pointer; transition:background .15s,transform .12s; margin-top:6px; }
+    .btn-auth:hover { background:var(--amber-hot); transform:translateY(-1px); }
+    .btn-auth:active { transform:translateY(0); }
+    #toast-container { position:fixed; bottom:24px; right:24px; z-index:9999; display:flex; flex-direction:column; gap:10px; pointer-events:none; }
+    .toast { display:flex; align-items:flex-start; gap:10px; min-width:260px; max-width:360px; padding:12px 14px; border-radius:var(--radius); border:1px solid transparent; font-size:0.84rem; font-weight:500; pointer-events:all; position:relative; overflow:hidden; transform:translateX(120%); opacity:0; transition:transform .32s cubic-bezier(.16,1,.3,1),opacity .32s ease; box-shadow:0 8px 24px rgba(0,0,0,.45); }
+    .toast.show{transform:translateX(0);opacity:1}.toast.hide{transform:translateX(120%);opacity:0}
+    .toast-close{flex-shrink:0;background:none;border:none;color:inherit;opacity:.45;cursor:pointer;font-size:1rem;transition:opacity .15s}.toast-close:hover{opacity:.9}
     .toast-progress{position:absolute;bottom:0;left:0;height:2px;border-radius:0 0 var(--radius) var(--radius);width:100%;transform-origin:left;animation:tdrain 4s linear forwards}
     @keyframes tdrain{from{transform:scaleX(1)}to{transform:scaleX(0)}}
-    .toast-success{background:#0e2820;color:#34d399;border-color:rgba(16,185,129,.25)}
-    .toast-success .toast-progress{background:#10b981}
-    .toast-error{background:#250f0f;color:#f87171;border-color:rgba(239,68,68,.25)}
-    .toast-error .toast-progress{background:#ef4444}
-    .toast-warning{background:#1f1506;color:var(--amber);border-color:rgba(245,158,11,.25)}
-    .toast-warning .toast-progress{background:var(--amber)}
-    .toast-info{background:#0d1729;color:#60a5fa;border-color:rgba(59,130,246,.25)}
-    .toast-info .toast-progress{background:#3b82f6}
-
-    @media (max-width: 768px) {
-      html, body { overflow: auto; }
-      .auth-layout { flex-direction: column; }
-      .auth-scene  { display: none; }
-      .auth-panel  { width: 100%; border-left: none; min-height: 100svh; padding: 36px 24px; }
+    .toast-success{background:#0e2820;color:#34d399;border-color:rgba(16,185,129,.25)}.toast-success .toast-progress{background:#10b981}
+    .toast-error{background:#250f0f;color:#f87171;border-color:rgba(239,68,68,.25)}.toast-error .toast-progress{background:#ef4444}
+    .toast-warning{background:#1f1506;color:var(--amber);border-color:rgba(245,158,11,.25)}.toast-warning .toast-progress{background:var(--amber)}
+    .toast-info{background:#0d1729;color:#60a5fa;border-color:rgba(59,130,246,.25)}.toast-info .toast-progress{background:#3b82f6}
+    @media (max-width:768px) {
+      html,body{overflow:auto} .auth-layout{flex-direction:column}
+      .auth-scene{display:none} .auth-panel{width:100%;border-left:none;min-height:100svh;padding:36px 24px}
     }
   </style>
 </head>
 <body>
-
 <canvas id="arena-canvas"></canvas>
-
 <div class="auth-layout">
-  <!-- SCENE SIDE (left for signup) -->
   <div class="auth-scene">
     <div class="scene-label">JOIN<br>THE<br>ARENA</div>
   </div>
-
-  <!-- FORM PANEL (right for signup) -->
   <aside class="auth-panel">
     <div class="brand">
       <div class="brand-icon">
@@ -233,246 +83,105 @@
       </div>
       NEX<span style="color:var(--pale)">US</span>
     </div>
-
     <div class="auth-eyebrow">Tournament Platform</div>
     <h1 class="auth-title">Create<br>Account</h1>
-    <p class="auth-sub">
-      Already have an account?
-      <a href="{% url 'login' %}">Log in →</a>
-    </p>
-
+    <p class="auth-sub">Already have an account? <a href="{% url 'login' %}">Log in →</a></p>
     {% if form.non_field_errors %}
-    <div class="form-error">
-      {% for error in form.non_field_errors %}{{ error }}{% endfor %}
-    </div>
+    <div class="form-error">{% for error in form.non_field_errors %}{{ error }}{% endfor %}</div>
     {% endif %}
-
     <form method="post" novalidate>
       {% csrf_token %}
       {% for field in form %}
       <div class="field">
         <label for="{{ field.id_for_label }}">{{ field.label }}</label>
         {{ field }}
-        {% if field.errors %}
-        <ul class="errorlist">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>
-        {% endif %}
-        {% if field.help_text %}
-        <span class="helptext">{{ field.help_text }}</span>
-        {% endif %}
+        {% if field.errors %}<ul class="errorlist">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+        {% if field.help_text %}<span class="helptext">{{ field.help_text }}</span>{% endif %}
       </div>
       {% endfor %}
       <button type="submit" class="btn-auth">Join the Arena</button>
     </form>
   </aside>
 </div>
-
 <div id="toast-container" aria-live="polite"></div>
 {% if messages %}
 <script id="django-messages" type="application/json">
 [{% for m in messages %}{"level":"{{ m.level_tag }}","text":"{{ m|escapejs }}"}{% if not forloop.last %},{% endif %}{% endfor %}]
 </script>
 {% endif %}
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
 <script>
-(function () {
-  const canvas = document.getElementById('arena-canvas');
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setClearColor(0x0b0d10, 1);
-
-  const scene = new THREE.Scene();
-  scene.fog = new THREE.FogExp2(0x0b0d10, 0.028);
-
-  const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 200);
-  camera.position.set(0, 8, 22);
-  camera.lookAt(0, 0, 0);
-
-  const gridHelper = new THREE.GridHelper(100, 50, 0x2a3248, 0x1a2035);
-  scene.add(gridHelper);
-
-  scene.add(new THREE.AmbientLight(0x1a2040, 1.4));
-  const keyLight = new THREE.DirectionalLight(0xf59e0b, 1.0);
-  keyLight.position.set(-10, 20, 5);
-  scene.add(keyLight);
-  const fillLight = new THREE.DirectionalLight(0x8b5cf6, 0.5);
-  fillLight.position.set(15, 10, -10);
-  scene.add(fillLight);
-
-  /* ── TROPHY / CROWN SHAPE at centre ── */
-  const trophyGroup = new THREE.Group();
-  scene.add(trophyGroup);
-
-  /* Base ring */
-  const torusGeo = new THREE.TorusGeometry(1.8, 0.09, 12, 60);
-  const goldMat = new THREE.MeshStandardMaterial({
-    color: 0xf59e0b, emissive: 0xf59e0b, emissiveIntensity: 0.4,
-    metalness: 0.8, roughness: 0.2
-  });
-  trophyGroup.add(new THREE.Mesh(torusGeo, goldMat));
-
-  /* Inner ring */
-  const innerTorus = new THREE.Mesh(new THREE.TorusGeometry(1.0, 0.06, 10, 48), goldMat);
-  innerTorus.position.y = 0.8;
-  trophyGroup.add(innerTorus);
-
-  /* Crown spikes */
-  const spikeMat = new THREE.MeshStandardMaterial({
-    color: 0xfbbf24, emissive: 0xfbbf24, emissiveIntensity: 0.5,
-    metalness: 0.7, roughness: 0.25
-  });
-  const spikePositions = [0, 1, 2, 3, 4, 5];
-  spikePositions.forEach(i => {
-    const angle = (i / 6) * Math.PI * 2;
-    const spikeGeo = new THREE.ConeGeometry(0.12, 0.9 + (i%2)*0.35, 6);
-    const spike = new THREE.Mesh(spikeGeo, spikeMat);
-    spike.position.set(Math.cos(angle)*1.8, 0.6 + (i%2)*0.25, Math.sin(angle)*1.8);
-    spike.rotation.z = Math.atan2(spike.position.z, spike.position.x);
-    trophyGroup.add(spike);
-  });
-
-  /* Central gem */
-  const gemGeo = new THREE.OctahedronGeometry(0.45, 1);
-  const gemMat = new THREE.MeshStandardMaterial({
-    color: 0xf0f4ff, emissive: 0xf0f4ff, emissiveIntensity: 0.6,
-    metalness: 0.9, roughness: 0.05
-  });
-  const gem = new THREE.Mesh(gemGeo, gemMat);
-  gem.position.y = 0.8;
-  trophyGroup.add(gem);
-
-  trophyGroup.position.set(-3, 4, -6);
-
-  /* ── ORBITING BRACKET NODES ── */
-  const orbitGroup = new THREE.Group();
-  trophyGroup.add(orbitGroup);
-  const nodeCount = 8;
-  const orbitNodes = [];
-  for (let i = 0; i < nodeCount; i++) {
-    const angle = (i / nodeCount) * Math.PI * 2;
-    const mat = i % 3 === 0
-      ? new THREE.MeshStandardMaterial({ color: 0xf59e0b, emissive: 0xf59e0b, emissiveIntensity: 0.5, metalness: 0.6, roughness: 0.3 })
-      : new THREE.MeshStandardMaterial({ color: 0x3a4560, emissive: 0x1e2535, emissiveIntensity: 0.2, metalness: 0.7, roughness: 0.4 });
-    const node = new THREE.Mesh(new THREE.OctahedronGeometry(0.15, 0), mat);
-    node.position.set(Math.cos(angle)*3.5, 0, Math.sin(angle)*3.5);
-    orbitGroup.add(node);
-    orbitNodes.push(node);
+(function(){
+  const canvas=document.getElementById('arena-canvas');
+  const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  renderer.setSize(window.innerWidth,window.innerHeight);
+  renderer.setClearColor(0x0b0d10,1);
+  const scene=new THREE.Scene(); scene.fog=new THREE.FogExp2(0x0b0d10,0.028);
+  const camera=new THREE.PerspectiveCamera(60,window.innerWidth/window.innerHeight,0.1,200);
+  camera.position.set(0,8,22); camera.lookAt(0,0,0);
+  scene.add(new THREE.GridHelper(100,50,0x2a3248,0x1a2035));
+  scene.add(new THREE.AmbientLight(0x1a2040,1.4));
+  const kl=new THREE.DirectionalLight(0xf59e0b,1.0); kl.position.set(-10,20,5); scene.add(kl);
+  const fl=new THREE.DirectionalLight(0x8b5cf6,0.5); fl.position.set(15,10,-10); scene.add(fl);
+  const tg=new THREE.Group(); scene.add(tg);
+  const goldMat=new THREE.MeshStandardMaterial({color:0xf59e0b,emissive:0xf59e0b,emissiveIntensity:0.4,metalness:0.8,roughness:0.2});
+  tg.add(new THREE.Mesh(new THREE.TorusGeometry(1.8,0.09,12,60),goldMat));
+  const inner=new THREE.Mesh(new THREE.TorusGeometry(1.0,0.06,10,48),goldMat); inner.position.y=0.8; tg.add(inner);
+  const spikeMat=new THREE.MeshStandardMaterial({color:0xfbbf24,emissive:0xfbbf24,emissiveIntensity:0.5,metalness:0.7,roughness:0.25});
+  [0,1,2,3,4,5].forEach(i=>{ const a=(i/6)*Math.PI*2; const s=new THREE.Mesh(new THREE.ConeGeometry(0.12,0.9+(i%2)*0.35,6),spikeMat); s.position.set(Math.cos(a)*1.8,0.6+(i%2)*0.25,Math.sin(a)*1.8); tg.add(s); });
+  const gem=new THREE.Mesh(new THREE.OctahedronGeometry(0.45,1),new THREE.MeshStandardMaterial({color:0xf0f4ff,emissive:0xf0f4ff,emissiveIntensity:0.6,metalness:0.9,roughness:0.05}));
+  gem.position.y=0.8; tg.add(gem);
+  tg.position.set(-3,4,-6);
+  const og=new THREE.Group(); tg.add(og);
+  for(let i=0;i<8;i++){
+    const a=(i/8)*Math.PI*2;
+    const mat=i%3===0?new THREE.MeshStandardMaterial({color:0xf59e0b,emissive:0xf59e0b,emissiveIntensity:0.5,metalness:0.6,roughness:0.3}):new THREE.MeshStandardMaterial({color:0x3a4560,emissive:0x1e2535,emissiveIntensity:0.2,metalness:0.7,roughness:0.4});
+    const n=new THREE.Mesh(new THREE.OctahedronGeometry(0.15,0),mat); n.position.set(Math.cos(a)*3.5,0,Math.sin(a)*3.5); og.add(n);
   }
-
-  /* ── SCATTERED BACKGROUND BRACKETS ── */
-  const dimMat2 = new THREE.MeshStandardMaterial({ color: 0x2a3248, emissive: 0x1a2035, emissiveIntensity: 0.1, metalness: 0.5, roughness: 0.6 });
-  function addBackgroundCluster(x, y, z) {
-    const g = new THREE.Group();
-    g.position.set(x, y, z);
-    for (let i = 0; i < 5; i++) {
-      const node = new THREE.Mesh(new THREE.OctahedronGeometry(0.14 + Math.random()*0.1, 0), dimMat2);
-      node.position.set((Math.random()-0.5)*3, (Math.random()-0.5)*2, (Math.random()-0.5)*3);
-      g.add(node);
-    }
-    scene.add(g);
-    return g;
-  }
-  const clusters = [
-    addBackgroundCluster(10, 2, -15),
-    addBackgroundCluster(-12, 3, -18),
-    addBackgroundCluster(6, 5, -25),
-    addBackgroundCluster(-6, 1, -12),
-    addBackgroundCluster(16, 4, -22),
-  ];
-
-  /* ── PARTICLES ── */
-  const pCount = 500;
-  const pGeo = new THREE.BufferGeometry();
-  const pPos = new Float32Array(pCount * 3);
-  const pVel = new Float32Array(pCount);
-  for (let i = 0; i < pCount; i++) {
-    pPos[i*3]   = (Math.random()-0.5)*90;
-    pPos[i*3+1] = Math.random()*35 - 3;
-    pPos[i*3+2] = (Math.random()-0.5)*70 - 8;
-    pVel[i]     = Math.random()*0.006 + 0.003;
-  }
-  pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
-  const pMat2 = new THREE.PointsMaterial({ color: 0x8b5cf6, size: 0.1, transparent: true, opacity: 0.45 });
-  const particles2 = new THREE.Points(pGeo, pMat2);
-  scene.add(particles2);
-
-  /* Second particle layer in amber */
-  const pGeo2 = new THREE.BufferGeometry();
-  const pPos2 = new Float32Array(200 * 3);
-  for (let i = 0; i < 200; i++) {
-    pPos2[i*3]   = (Math.random()-0.5)*60;
-    pPos2[i*3+1] = Math.random()*25;
-    pPos2[i*3+2] = (Math.random()-0.5)*50 - 5;
-  }
-  pGeo2.setAttribute('position', new THREE.BufferAttribute(pPos2, 3));
-  scene.add(new THREE.Points(pGeo2, new THREE.PointsMaterial({ color: 0xf59e0b, size: 0.08, transparent: true, opacity: 0.3 })));
-
-  /* ── MOUSE PARALLAX ── */
-  let mouseX = 0, mouseY = 0;
-  document.addEventListener('mousemove', e => {
-    mouseX = (e.clientX / window.innerWidth  - 0.5) * 2;
-    mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+  const dm=new THREE.MeshStandardMaterial({color:0x2a3248,emissive:0x1a2035,emissiveIntensity:0.1,metalness:0.5,roughness:0.6});
+  const clusters=[[-10,2,-15],[12,3,-18],[6,5,-25],[-6,1,-12],[16,4,-22]].map(([x,y,z])=>{
+    const g=new THREE.Group(); g.position.set(x,y,z);
+    for(let i=0;i<5;i++){ const n=new THREE.Mesh(new THREE.OctahedronGeometry(0.14+Math.random()*0.1,0),dm); n.position.set((Math.random()-.5)*3,(Math.random()-.5)*2,(Math.random()-.5)*3); g.add(n); }
+    scene.add(g); return g;
   });
-
-  /* ── ANIMATION LOOP ── */
-  let t = 0;
-  function animate() {
-    requestAnimationFrame(animate);
-    t += 0.007;
-
-    trophyGroup.rotation.y = t * 0.25;
-    gem.rotation.y = t * 1.2;
-    gem.rotation.x = t * 0.7;
-    gem.position.y = 0.8 + Math.sin(t * 1.5) * 0.08;
-    innerTorus.rotation.x = t * 0.6;
-    orbitGroup.rotation.y = -t * 0.8;
-
-    clusters.forEach((c, i) => {
-      c.rotation.y = t * 0.15 * (i%2 === 0 ? 1 : -1);
-      c.position.y = c.position.y + Math.sin(t * 0.4 + i) * 0.001;
-    });
-
-    for (let i = 0; i < pCount; i++) {
-      pPos[i*3+1] += pVel[i];
-      if (pPos[i*3+1] > 32) { pPos[i*3+1] = -3; pPos[i*3] = (Math.random()-0.5)*90; }
-    }
-    pGeo.attributes.position.needsUpdate = true;
-
-    camera.position.x += (mouseX * 3 - camera.position.x) * 0.035;
-    camera.position.y += (-mouseY * 2 + 8 - camera.position.y) * 0.035;
-    camera.lookAt(0, 3, 0);
-
-    renderer.render(scene, camera);
-  }
-  animate();
-
-  window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-  });
-
-  /* Toasts */
-  const ICONS = { success: '✓', error: '✕', warning: '⚠', info: 'ℹ' };
-  function showToast(level, text) {
-    const el = document.createElement('div');
-    el.className = 'toast toast-' + (level || 'info');
-    el.setAttribute('role', 'alert');
-    el.innerHTML =
-      '<span>' + (ICONS[level]||'ℹ') + '</span>' +
-      '<span style="flex:1">' + text + '</span>' +
-      '<button class="toast-close" aria-label="Dismiss">&times;</button>' +
-      '<div class="toast-progress"></div>';
+  const pCount=500, pGeo=new THREE.BufferGeometry();
+  const pPos=new Float32Array(pCount*3), pVel=new Float32Array(pCount);
+  for(let i=0;i<pCount;i++){ pPos[i*3]=(Math.random()-.5)*90; pPos[i*3+1]=Math.random()*35-3; pPos[i*3+2]=(Math.random()-.5)*70-8; pVel[i]=Math.random()*0.006+0.003; }
+  pGeo.setAttribute('position',new THREE.BufferAttribute(pPos,3));
+  scene.add(new THREE.Points(pGeo,new THREE.PointsMaterial({color:0x8b5cf6,size:0.1,transparent:true,opacity:0.45})));
+  const pGeo2=new THREE.BufferGeometry(), pPos2=new Float32Array(200*3);
+  for(let i=0;i<200;i++){ pPos2[i*3]=(Math.random()-.5)*60; pPos2[i*3+1]=Math.random()*25; pPos2[i*3+2]=(Math.random()-.5)*50-5; }
+  pGeo2.setAttribute('position',new THREE.BufferAttribute(pPos2,3));
+  scene.add(new THREE.Points(pGeo2,new THREE.PointsMaterial({color:0xf59e0b,size:0.08,transparent:true,opacity:0.3})));
+  let mouseX=0,mouseY=0;
+  document.addEventListener('mousemove',e=>{ mouseX=(e.clientX/window.innerWidth-.5)*2; mouseY=(e.clientY/window.innerHeight-.5)*2; });
+  let t=0;
+  (function animate(){
+    requestAnimationFrame(animate); t+=0.007;
+    tg.rotation.y=t*0.25; gem.rotation.y=t*1.2; gem.rotation.x=t*0.7;
+    gem.position.y=0.8+Math.sin(t*1.5)*0.08; inner.rotation.x=t*0.6; og.rotation.y=-t*0.8;
+    clusters.forEach((c,i)=>{ c.rotation.y=t*0.15*(i%2===0?1:-1); });
+    for(let i=0;i<pCount;i++){ pPos[i*3+1]+=pVel[i]; if(pPos[i*3+1]>32){pPos[i*3+1]=-3;pPos[i*3]=(Math.random()-.5)*90;} }
+    pGeo.attributes.position.needsUpdate=true;
+    camera.position.x+=(mouseX*3-camera.position.x)*0.035;
+    camera.position.y+=(-mouseY*2+8-camera.position.y)*0.035;
+    camera.lookAt(0,3,0);
+    renderer.render(scene,camera);
+  })();
+  window.addEventListener('resize',()=>{ camera.aspect=window.innerWidth/window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth,window.innerHeight); });
+  const ICONS={success:'✓',error:'✕',warning:'⚠',info:'ℹ'};
+  function showToast(level,text){
+    const el=document.createElement('div'); el.className='toast toast-'+(level||'info'); el.setAttribute('role','alert');
+    el.innerHTML='<span>'+(ICONS[level]||'ℹ')+'</span><span style="flex:1">'+text+'</span><button class="toast-close" aria-label="Dismiss">&times;</button><div class="toast-progress"></div>';
     document.getElementById('toast-container').appendChild(el);
-    requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('show')));
-    const dismiss = () => { el.classList.add('hide'); el.addEventListener('transitionend', () => el.remove(), {once:true}); };
-    el.querySelector('.toast-close').addEventListener('click', dismiss);
-    setTimeout(dismiss, 4000);
+    requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('show')));
+    const dismiss=()=>{el.classList.add('hide');el.addEventListener('transitionend',()=>el.remove(),{once:true})};
+    el.querySelector('.toast-close').addEventListener('click',dismiss); setTimeout(dismiss,4000);
   }
-  const seed = document.getElementById('django-messages');
-  if (seed) { try { JSON.parse(seed.textContent).forEach(m => showToast(m.level, m.text)); } catch(e){} }
-  window.Toasts = { show: showToast };
+  const seed=document.getElementById('django-messages');
+  if(seed){try{JSON.parse(seed.textContent).forEach(m=>showToast(m.level,m.text));}catch(e){}}
+  window.Toasts={show:showToast};
 })();
 </script>
 </body>
