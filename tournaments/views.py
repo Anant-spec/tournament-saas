@@ -144,6 +144,49 @@ def tournament_detail(request, pk):
     })
 
 
+@login_required
+@require_POST
+@transaction.atomic
+def reset_bracket(request, pk):
+    tournament = get_object_or_404(
+        Tournament.objects.select_for_update(),
+        pk=pk,
+        organization__owner=request.user
+    )
+
+    # Confirm the user typed the tournament name correctly
+    confirm_name = request.POST.get("confirm_name", "").strip()
+    if confirm_name != tournament.name:
+        messages.error(request, "Tournament name did not match. Bracket reset cancelled.")
+        return redirect("tournament_detail", pk=tournament.pk)
+
+    if not tournament.matches.exists():
+        messages.info(request, "No bracket to reset.")
+        return redirect("tournament_detail", pk=tournament.pk)
+
+    # Delete all matches
+    deleted_count, _ = tournament.matches.all().delete()
+
+    # Reset tournament state
+    tournament.status = "draft"
+    tournament.champion = None
+    tournament.save(update_fields=["status", "champion"])
+
+    # Keep registrations approved — teams stay approved so bracket
+    # can be regenerated immediately without re-approving everyone.
+    # (Uncomment below if you want to revert all to pending instead.)
+    # from registrations.models import Registration
+    # Registration.objects.filter(
+    #     tournament=tournament, status="approved"
+    # ).update(status="pending", approved_at=None)
+
+    messages.success(
+        request,
+        f"Bracket reset. {deleted_count} match{'es' if deleted_count != 1 else ''} deleted. "
+        f"Approved teams remain approved — regenerate when ready."
+    )
+    return redirect("tournament_detail", pk=tournament.pk)
+
 
 @login_required
 @require_POST

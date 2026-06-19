@@ -155,7 +155,7 @@
 .b-win-icon { font-size: 0.7rem; flex-shrink: 0; opacity: 0; }
 .b-team-row.is-winner .b-win-icon { opacity: 1; }
 
-/* ── ROSTER TOGGLE BUTTON ── */
+/* ── ROSTER TOGGLE ── */
 .b-roster-toggle {
     width: 100%;
     padding: 6px 10px;
@@ -207,19 +207,10 @@
     to   { opacity: 1; transform: translateY(0); }
 }
 
-.b-roster-team-block {
-    padding: 8px 10px;
-}
-.b-roster-team-block + .b-roster-team-block {
-    border-top: 1px solid rgba(42,50,72,0.5);
-}
+.b-roster-team-block { padding: 8px 10px; }
+.b-roster-team-block + .b-roster-team-block { border-top: 1px solid rgba(42,50,72,0.5); }
 
-.b-roster-team-heading {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-bottom: 5px;
-}
+.b-roster-team-heading { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
 .b-roster-team-heading .rth-name {
     font-family: 'Rajdhani', sans-serif;
     font-weight: 700;
@@ -237,13 +228,7 @@
     padding: 1px 4px;
 }
 
-/* Player rows inside drawer */
-.b-player-row {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 3px 0;
-}
+.b-player-row { display: flex; align-items: center; gap: 6px; padding: 3px 0; }
 .b-player-ign {
     font-family: 'Rajdhani', sans-serif;
     font-weight: 600;
@@ -255,12 +240,7 @@
     text-overflow: ellipsis;
     white-space: nowrap;
 }
-.b-player-uid {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.44rem;
-    color: var(--ghost);
-    flex-shrink: 0;
-}
+.b-player-uid { font-family: 'Space Mono', monospace; font-size: 0.44rem; color: var(--ghost); flex-shrink: 0; }
 .b-player-role {
     font-family: 'Space Mono', monospace;
     font-size: 0.42rem;
@@ -270,17 +250,10 @@
     border-radius: 3px;
     flex-shrink: 0;
 }
-.b-player-role.role-captain    { background: rgba(245,158,11,0.15); color: var(--amber); border: 1px solid rgba(245,158,11,0.25); }
-.b-player-role.role-player      { background: rgba(107,122,153,0.12); color: var(--dim); border: 1px solid var(--rim); }
-.b-player-role.role-substitute  { background: rgba(99,102,241,0.1); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.2); }
-
-.b-roster-empty {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.5rem;
-    color: var(--ghost);
-    padding: 4px 0;
-    font-style: italic;
-}
+.b-player-role.role-captain   { background: rgba(245,158,11,0.15); color: var(--amber); border: 1px solid rgba(245,158,11,0.25); }
+.b-player-role.role-player     { background: rgba(107,122,153,0.12); color: var(--dim); border: 1px solid var(--rim); }
+.b-player-role.role-substitute { background: rgba(99,102,241,0.1); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.2); }
+.b-roster-empty { font-family: 'Space Mono', monospace; font-size: 0.5rem; color: var(--ghost); padding: 4px 0; font-style: italic; }
 
 /* ── REPORT FORM ── */
 .b-report-toggle {
@@ -409,10 +382,7 @@
     letter-spacing: 0.05em;
     margin-bottom: 3px;
 }
-.gen-bracket-text span {
-    font-size: 0.78rem;
-    color: var(--dim);
-}
+.gen-bracket-text span { font-size: 0.78rem; color: var(--dim); }
 .gen-bracket-btn {
     padding: 9px 20px;
     background: var(--amber);
@@ -430,11 +400,176 @@
     flex-shrink: 0;
 }
 .gen-bracket-btn:hover { background: var(--amber-hot); }
-.gen-bracket-btn:disabled {
-    background: var(--ghost);
-    color: var(--dim);
-    cursor: not-allowed;
+.gen-bracket-btn:disabled { background: var(--ghost); color: var(--dim); cursor: not-allowed; }
+
+/* ── RESET MODAL ── */
+.modal-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.72);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    backdrop-filter: blur(3px);
 }
+.modal-backdrop.open { display: flex; animation: modalFadeIn 0.15s ease; }
+@keyframes modalFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.modal-box {
+    background: var(--plate);
+    border: 1px solid rgba(239,68,68,0.3);
+    border-radius: 12px;
+    width: 100%;
+    max-width: 440px;
+    overflow: hidden;
+    animation: modalSlideUp 0.18s ease;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.6);
+}
+@keyframes modalSlideUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 20px 16px;
+    border-bottom: 1px solid var(--rim);
+    background: rgba(239,68,68,0.06);
+}
+.modal-danger-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(239,68,68,0.15);
+    border: 1px solid rgba(239,68,68,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+.modal-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--white);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+.modal-subtitle {
+    font-size: 0.72rem;
+    color: var(--dim);
+    margin-top: 1px;
+}
+
+.modal-body { padding: 18px 20px; }
+
+.modal-warning-list {
+    background: rgba(239,68,68,0.06);
+    border: 1px solid rgba(239,68,68,0.15);
+    border-radius: 7px;
+    padding: 12px 14px;
+    margin-bottom: 16px;
+    list-style: none;
+}
+.modal-warning-list li {
+    font-size: 0.78rem;
+    color: var(--pale);
+    padding: 3px 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+}
+.modal-warning-list li::before {
+    content: '\2716';
+    color: #f87171;
+    font-size: 0.6rem;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.modal-confirm-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.58rem;
+    color: var(--dim);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 6px;
+}
+.modal-confirm-label span {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #f87171;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.modal-confirm-input {
+    width: 100%;
+    padding: 9px 12px;
+    background: var(--panel);
+    border: 1px solid var(--rim);
+    border-radius: 6px;
+    color: var(--wire);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    outline: none;
+    transition: border-color 0.15s;
+}
+.modal-confirm-input:focus { border-color: rgba(239,68,68,0.5); }
+.modal-confirm-input.valid { border-color: rgba(239,68,68,0.6); background: rgba(239,68,68,0.04); }
+
+.modal-footer {
+    display: flex;
+    gap: 8px;
+    padding: 14px 20px;
+    border-top: 1px solid var(--rim);
+    justify-content: flex-end;
+}
+
+.btn-modal-cancel {
+    padding: 8px 18px;
+    background: var(--panel);
+    border: 1px solid var(--rim);
+    border-radius: 6px;
+    color: var(--dim);
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: border-color 0.13s, color 0.13s;
+}
+.btn-modal-cancel:hover { border-color: var(--ghost); color: var(--pale); }
+
+.btn-modal-confirm {
+    padding: 8px 20px;
+    background: rgba(239,68,68,0.12);
+    border: 1px solid rgba(239,68,68,0.35);
+    border-radius: 6px;
+    color: #f87171;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.13s, border-color 0.13s;
+}
+.btn-modal-confirm:hover:not(:disabled) { background: rgba(239,68,68,0.22); border-color: rgba(239,68,68,0.55); }
+.btn-modal-confirm:disabled { opacity: 0.35; cursor: not-allowed; }
 
 /* ── SVG CONNECTORS ── */
 .bracket-svg-connectors {
@@ -467,15 +602,16 @@
         <form method="post" action="{% url 'toggle_registration' tournament.id %}" style="margin:0;">
             {% csrf_token %}
             {% if tournament.registration_open %}
-            <button type="submit" class="btn btn-danger btn-sm">&#128274; Close Registration</button>
+            <button type="submit" class="btn btn-danger btn-sm">&#128274; Close Reg</button>
             {% else %}
-            <button type="submit" class="btn btn-success btn-sm">&#128275; Open Registration</button>
+            <button type="submit" class="btn btn-success btn-sm">&#128275; Open Reg</button>
             {% endif %}
         </form>
         {% else %}
-        <span class="btn btn-ghost btn-sm" style="cursor:default; opacity:0.5;">
-            {% if tournament.registration_open %}&#128275; Open{% else %}&#128274; Closed{% endif %}
-        </span>
+        <!-- Reset Bracket button — only when bracket exists -->
+        <button type="button" class="btn btn-danger btn-sm" onclick="openResetModal()">
+            &#9851; Reset Bracket
+        </button>
         {% endif %}
         <a href="{% url 'tournament_edit' tournament.id %}" class="btn btn-secondary">Edit</a>
         <a href="{% url 'tournament_delete' tournament.id %}" class="btn btn-danger">Delete</a>
@@ -549,12 +685,9 @@
     </div>
 
     {% if not matches %}
-    <!-- Generate Bracket CTA -->
     {% if tournament.format_type == "single_elimination" %}
     <div class="gen-bracket-cta {% if approved_count >= 2 %}ready{% endif %}">
-        <div class="gen-bracket-icon">
-            {% if approved_count >= 2 %}&#9651;{% else %}&#9650;{% endif %}
-        </div>
+        <div class="gen-bracket-icon">{% if approved_count >= 2 %}&#9651;{% else %}&#9650;{% endif %}</div>
         <div class="gen-bracket-text">
             <strong>Generate Bracket</strong>
             {% if approved_count >= 2 %}
@@ -567,9 +700,7 @@
         </div>
         <form method="post" action="{% url 'generate_bracket' tournament.id %}" style="margin:0;">
             {% csrf_token %}
-            <button type="submit" class="gen-bracket-btn" {% if approved_count < 2 %}disabled{% endif %}>
-                &#9651; Generate
-            </button>
+            <button type="submit" class="gen-bracket-btn" {% if approved_count < 2 %}disabled{% endif %}>&#9651; Generate</button>
         </form>
     </div>
     {% else %}
@@ -590,33 +721,23 @@
             <div class="b-round" data-round="{{ round_number }}">
 
                 <div class="b-round-label">
-                    {% if round_number == total %}
-                        &#127942; Final
-                    {% elif round_number == total|add:"-1" %}
-                        Semi&#8209;Final
-                    {% elif round_number == total|add:"-2" %}
-                        Quarter&#8209;Final
-                    {% else %}
-                        Round {{ round_number }}
+                    {% if round_number == total %}&#127942; Final
+                    {% elif round_number == total|add:"-1" %}Semi&#8209;Final
+                    {% elif round_number == total|add:"-2" %}Quarter&#8209;Final
+                    {% else %}Round {{ round_number }}
                     {% endif %}
                 </div>
 
                 <div class="b-round-matches">
                     {% for match in round_matches %}
-
-                    {# Collect player counts for the toggle pill #}
                     {% with t1_players=match.team1.players.all t2_players=match.team2.players.all %}
                     {% with total_players=t1_players|length|add:t2_players|length %}
 
                     <div class="b-match status-{{ match.status }}{% if not match.team1 and not match.team2 %} is-bye{% endif %}"
-                         id="match-{{ match.id }}"
-                         data-match="{{ match.id }}">
+                         id="match-{{ match.id }}" data-match="{{ match.id }}">
 
-                        {% if round_number == total %}
-                        <div class="b-final-badge">Final</div>
-                        {% endif %}
+                        {% if round_number == total %}<div class="b-final-badge">Final</div>{% endif %}
 
-                        <!-- Match Header -->
                         <div class="b-match-header">
                             <span class="b-match-number">M{{ match.match_number }}</span>
                             {% if match.scheduled_at %}
@@ -625,94 +746,58 @@
                             <div class="b-status-dot"></div>
                         </div>
 
-                        <!-- Team 1 -->
-                        <div class="b-team-row
-                            {% if match.winner_id and match.winner_id == match.team1_id %}is-winner
-                            {% elif match.winner_id and match.winner_id != match.team1_id %}is-loser{% endif %}">
+                        <div class="b-team-row {% if match.winner_id and match.winner_id == match.team1_id %}is-winner{% elif match.winner_id and match.winner_id != match.team1_id %}is-loser{% endif %}">
                             <span class="b-team-seed">1</span>
-                            {% if match.team1 %}
-                            <span class="b-team-name">{{ match.team1.name }}</span>
-                            {% else %}
-                            <span class="b-team-name is-tbd">TBD</span>
-                            {% endif %}
+                            {% if match.team1 %}<span class="b-team-name">{{ match.team1.name }}</span>{% else %}<span class="b-team-name is-tbd">TBD</span>{% endif %}
                             <span class="b-win-icon">&#10003;</span>
                         </div>
 
-                        <!-- Team 2 -->
-                        <div class="b-team-row
-                            {% if match.winner_id and match.winner_id == match.team2_id %}is-winner
-                            {% elif match.winner_id and match.winner_id != match.team2_id %}is-loser{% endif %}">
+                        <div class="b-team-row {% if match.winner_id and match.winner_id == match.team2_id %}is-winner{% elif match.winner_id and match.winner_id != match.team2_id %}is-loser{% endif %}">
                             <span class="b-team-seed">2</span>
-                            {% if match.team2 %}
-                            <span class="b-team-name">{{ match.team2.name }}</span>
-                            {% else %}
-                            <span class="b-team-name is-tbd">TBD</span>
-                            {% endif %}
+                            {% if match.team2 %}<span class="b-team-name">{{ match.team2.name }}</span>{% else %}<span class="b-team-name is-tbd">TBD</span>{% endif %}
                             <span class="b-win-icon">&#10003;</span>
                         </div>
 
-                        <!-- Roster Toggle (only when at least one team has players) -->
                         {% if match.team1 or match.team2 %}
                         <button class="b-roster-toggle" onclick="toggleRoster(this)" aria-expanded="false">
                             &#9776; Roster
-                            {% if total_players > 0 %}
-                            <span class="player-count-pill">{{ total_players }}p</span>
-                            {% endif %}
+                            {% if total_players > 0 %}<span class="player-count-pill">{{ total_players }}p</span>{% endif %}
                             <span class="roster-arrow">&#9660;</span>
                         </button>
-
-                        <!-- Roster Drawer -->
                         <div class="b-roster-drawer">
-
                             {% if match.team1 %}
                             <div class="b-roster-team-block">
                                 <div class="b-roster-team-heading">
                                     <span class="rth-seed">T1</span>
                                     <span class="rth-name">{{ match.team1.name }}</span>
                                 </div>
-                                {% if t1_players %}
-                                    {% for player in t1_players %}
-                                    <div class="b-player-row">
-                                        <span class="b-player-ign">{{ player.in_game_name }}</span>
-                                        {% if player.game_uid %}
-                                        <span class="b-player-uid">#{{ player.game_uid }}</span>
-                                        {% endif %}
-                                        <span class="b-player-role role-{{ player.role }}">{{ player.role }}</span>
-                                    </div>
-                                    {% endfor %}
-                                {% else %}
-                                    <div class="b-roster-empty">No players added yet</div>
-                                {% endif %}
+                                {% if t1_players %}{% for player in t1_players %}
+                                <div class="b-player-row">
+                                    <span class="b-player-ign">{{ player.in_game_name }}</span>
+                                    {% if player.game_uid %}<span class="b-player-uid">#{{ player.game_uid }}</span>{% endif %}
+                                    <span class="b-player-role role-{{ player.role }}">{{ player.role }}</span>
+                                </div>
+                                {% endfor %}{% else %}<div class="b-roster-empty">No players added yet</div>{% endif %}
                             </div>
                             {% endif %}
-
                             {% if match.team2 %}
                             <div class="b-roster-team-block">
                                 <div class="b-roster-team-heading">
                                     <span class="rth-seed">T2</span>
                                     <span class="rth-name">{{ match.team2.name }}</span>
                                 </div>
-                                {% if t2_players %}
-                                    {% for player in t2_players %}
-                                    <div class="b-player-row">
-                                        <span class="b-player-ign">{{ player.in_game_name }}</span>
-                                        {% if player.game_uid %}
-                                        <span class="b-player-uid">#{{ player.game_uid }}</span>
-                                        {% endif %}
-                                        <span class="b-player-role role-{{ player.role }}">{{ player.role }}</span>
-                                    </div>
-                                    {% endfor %}
-                                {% else %}
-                                    <div class="b-roster-empty">No players added yet</div>
-                                {% endif %}
+                                {% if t2_players %}{% for player in t2_players %}
+                                <div class="b-player-row">
+                                    <span class="b-player-ign">{{ player.in_game_name }}</span>
+                                    {% if player.game_uid %}<span class="b-player-uid">#{{ player.game_uid }}</span>{% endif %}
+                                    <span class="b-player-role role-{{ player.role }}">{{ player.role }}</span>
+                                </div>
+                                {% endfor %}{% else %}<div class="b-roster-empty">No players added yet</div>{% endif %}
                             </div>
                             {% endif %}
-
                         </div>
                         {% endif %}
-                        <!-- / Roster -->
 
-                        <!-- Report form -->
                         {% if match.status != "completed" and match.team1 and match.team2 %}
                         <button class="b-report-toggle" onclick="toggleReport(this)">
                             <span class="tog-icon">+</span> Report Result
@@ -739,17 +824,11 @@
                         {% endif %}
 
                     </div>
-
-                    {% endwith %}
-                    {% endwith %}
+                    {% endwith %}{% endwith %}
                     {% endfor %}
                 </div>
             </div>
-
-            {% if not forloop.last %}
-            <div class="b-connector" data-after-round="{{ round_number }}"></div>
-            {% endif %}
-
+            {% if not forloop.last %}<div class="b-connector" data-after-round="{{ round_number }}"></div>{% endif %}
             {% endwith %}
             {% endfor %}
 
@@ -759,7 +838,91 @@
 
 </div>
 
+<!-- ── RESET BRACKET MODAL ── -->
+{% if tournament.matches.exists %}
+<div class="modal-backdrop" id="resetModal" onclick="handleBackdropClick(event)">
+    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+
+        <div class="modal-header">
+            <div class="modal-danger-icon">&#9888;</div>
+            <div>
+                <div class="modal-title" id="modalTitle">Reset Bracket</div>
+                <div class="modal-subtitle">{{ tournament.name }}</div>
+            </div>
+        </div>
+
+        <div class="modal-body">
+            <ul class="modal-warning-list">
+                <li>All {{ matches|length }} match{% if matches|length != 1 %}es{% endif %} will be permanently deleted</li>
+                <li>All reported results and winners will be lost</li>
+                <li>Tournament status reverts to <strong>draft</strong></li>
+                <li>Approved teams remain approved &mdash; you can regenerate immediately</li>
+            </ul>
+
+            <label class="modal-confirm-label" for="confirmNameInput">
+                Type the tournament name to confirm:
+                <span>{{ tournament.name }}</span>
+            </label>
+            <input
+                type="text"
+                id="confirmNameInput"
+                class="modal-confirm-input"
+                placeholder="{{ tournament.name }}"
+                autocomplete="off"
+                oninput="checkConfirmName(this)"
+            >
+        </div>
+
+        <div class="modal-footer">
+            <button type="button" class="btn-modal-cancel" onclick="closeResetModal()">Cancel</button>
+            <form method="post" action="{% url 'reset_bracket' tournament.id %}" style="margin:0;">
+                {% csrf_token %}
+                <input type="hidden" name="confirm_name" id="confirmNameHidden" value="">
+                <button type="submit" class="btn-modal-confirm" id="confirmResetBtn" disabled>
+                    &#9851; Reset Bracket
+                </button>
+            </form>
+        </div>
+
+    </div>
+</div>
+{% endif %}
+
 <script>
+// ── RESET MODAL ──
+const TOURNAMENT_NAME = {{ tournament.name|escapejs|json_script:"tn-data" }};
+const tnData = document.getElementById('tn-data');
+const TNAME = tnData ? JSON.parse(tnData.textContent) : '';
+
+function openResetModal() {
+    document.getElementById('resetModal').classList.add('open');
+    document.getElementById('confirmNameInput').value = '';
+    document.getElementById('confirmResetBtn').disabled = true;
+    document.getElementById('confirmNameHidden').value = '';
+    setTimeout(() => document.getElementById('confirmNameInput').focus(), 80);
+}
+
+function closeResetModal() {
+    document.getElementById('resetModal').classList.remove('open');
+}
+
+function handleBackdropClick(e) {
+    if (e.target === document.getElementById('resetModal')) closeResetModal();
+}
+
+function checkConfirmName(input) {
+    const match = input.value === TNAME;
+    input.classList.toggle('valid', match);
+    const btn = document.getElementById('confirmResetBtn');
+    const hidden = document.getElementById('confirmNameHidden');
+    btn.disabled = !match;
+    hidden.value = match ? input.value : '';
+}
+
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeResetModal();
+});
+
 // ── ROSTER TOGGLE ──
 function toggleRoster(btn) {
     const drawer = btn.nextElementSibling;
@@ -793,33 +956,26 @@ document.addEventListener('DOMContentLoaded', function() {
     function drawConnectors() {
         const old = canvas.querySelector('.bracket-svg-connectors');
         if (old) old.remove();
-
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         svg.classList.add('bracket-svg-connectors');
         canvas.appendChild(svg);
-
         const wrap = canvas.closest('.bracket-scroll-wrap');
         const canvasRect = canvas.getBoundingClientRect();
-
         for (let r = 0; r < rounds.length - 1; r++) {
             const curMatches  = rounds[r].querySelectorAll('.b-match');
             const nextMatches = rounds[r + 1].querySelectorAll('.b-match');
-
             for (let i = 0; i < curMatches.length; i++) {
                 const from = curMatches[i];
                 const to   = nextMatches[Math.floor(i / 2)];
                 if (!to) continue;
-
                 const fR = from.getBoundingClientRect();
                 const tR = to.getBoundingClientRect();
                 const sl = wrap ? wrap.scrollLeft : 0;
-
                 const x1 = fR.right  - canvasRect.left + sl;
                 const y1 = fR.top    - canvasRect.top  + fR.height / 2;
                 const x2 = tR.left   - canvasRect.left + sl;
                 const y2 = tR.top    - canvasRect.top  + tR.height / 2;
                 const mx = (x1 + x2) / 2;
-
                 const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
                 path.setAttribute('d', `M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`);
                 path.setAttribute('fill', 'none');
@@ -832,12 +988,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     drawConnectors();
-
-    // Redraw connectors when rosters open/close (they change card height)
     document.querySelectorAll('.b-roster-toggle').forEach(btn => {
         btn.addEventListener('click', () => setTimeout(drawConnectors, 220));
     });
-
     window.addEventListener('resize', drawConnectors);
     const wrap = canvas.closest('.bracket-scroll-wrap');
     if (wrap) wrap.addEventListener('scroll', drawConnectors);

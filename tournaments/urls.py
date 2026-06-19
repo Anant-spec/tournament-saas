@@ -8,6 +8,7 @@ urlpatterns = [
     path("<uuid:pk>/delete/", views.tournament_delete, name="tournament_delete"),
     path("<uuid:pk>/", views.tournament_detail, name="tournament_detail"),
     path("<uuid:pk>/generate-bracket/", views.generate_bracket, name="generate_bracket"),
+    path("<uuid:pk>/reset-bracket/", views.reset_bracket, name="reset_bracket"),
     path("<uuid:pk>/toggle-registration/", views.toggle_registration, name="toggle_registration"),
     path("matches/<uuid:match_id>/report/", views.report_match_result, name="report_match_result"),
 ]
