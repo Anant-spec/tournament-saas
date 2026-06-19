@@ -1,12 +1,220 @@
 {% extends "base.html" %}
 {% block title %}Registrations — Nexus{% endblock %}
 
+{% block extra_head %}
+<style>
+/* ── FILTER TABS ── */
+.reg-filters {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.reg-filter-btn {
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border: 1px solid var(--rim);
+    background: var(--panel);
+    color: var(--dim);
+    transition: all 0.15s;
+}
+.reg-filter-btn:hover { color: var(--wire); border-color: var(--ghost); }
+.reg-filter-btn.active {
+    background: var(--amber-bg);
+    border-color: rgba(245,158,11,0.35);
+    color: var(--amber);
+}
+.reg-filter-btn .count-pip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    font-size: 0.55rem;
+    background: var(--rim);
+    color: var(--pale);
+    margin-left: 5px;
+    vertical-align: middle;
+}
+.reg-filter-btn.active .count-pip {
+    background: rgba(245,158,11,0.2);
+    color: var(--amber);
+}
+
+/* ── BULK BAR ── */
+.bulk-bar {
+    display: none;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    background: rgba(245,158,11,0.06);
+    border: 1px solid rgba(245,158,11,0.2);
+    border-radius: 8px;
+    margin-bottom: 14px;
+}
+.bulk-bar.visible { display: flex; }
+.bulk-bar-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.58rem;
+    color: var(--amber);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    flex: 1;
+}
+
+/* ── TABLE ENHANCEMENTS ── */
+.reg-row { transition: background 0.12s; }
+.reg-row:hover { background: rgba(255,255,255,0.015); }
+.reg-row.status-pending  { border-left: 2px solid rgba(245,158,11,0.4); }
+.reg-row.status-approved { border-left: 2px solid rgba(16,185,129,0.35); }
+.reg-row.status-rejected { border-left: 2px solid rgba(239,68,68,0.3); opacity: 0.65; }
+
+.team-name-cell {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    color: var(--wire);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: 0.88rem;
+}
+
+.tournament-link {
+    color: var(--pale);
+    text-decoration: none;
+    font-size: 0.8rem;
+    transition: color 0.12s;
+}
+.tournament-link:hover { color: var(--amber); }
+
+/* ── INLINE ACTION BUTTONS ── */
+.action-cell {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+.btn-approve {
+    padding: 5px 11px;
+    background: rgba(16,185,129,0.1);
+    border: 1px solid rgba(16,185,129,0.3);
+    border-radius: 5px;
+    color: #34d399;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.13s, border-color 0.13s;
+    white-space: nowrap;
+}
+.btn-approve:hover {
+    background: rgba(16,185,129,0.2);
+    border-color: rgba(16,185,129,0.5);
+}
+
+.btn-reject {
+    padding: 5px 11px;
+    background: rgba(239,68,68,0.08);
+    border: 1px solid rgba(239,68,68,0.25);
+    border-radius: 5px;
+    color: #f87171;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.13s, border-color 0.13s;
+    white-space: nowrap;
+}
+.btn-reject:hover {
+    background: rgba(239,68,68,0.16);
+    border-color: rgba(239,68,68,0.4);
+}
+
+.btn-reopen {
+    padding: 5px 11px;
+    background: rgba(107,122,153,0.1);
+    border: 1px solid rgba(107,122,153,0.25);
+    border-radius: 5px;
+    color: var(--dim);
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.13s, border-color 0.13s;
+    white-space: nowrap;
+}
+.btn-reopen:hover {
+    background: rgba(107,122,153,0.18);
+    border-color: rgba(107,122,153,0.4);
+    color: var(--pale);
+}
+
+.btn-roster {
+    padding: 5px 10px;
+    background: transparent;
+    border: 1px solid var(--rim);
+    border-radius: 5px;
+    color: var(--dim);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.52rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: border-color 0.13s, color 0.13s;
+    white-space: nowrap;
+}
+.btn-roster:hover { border-color: var(--ghost); color: var(--pale); }
+
+/* ── LOCKED BADGE ── */
+.locked-note {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.5rem;
+    color: var(--ghost);
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+}
+
+/* ── CHECKBOX ── */
+input[type="checkbox"].reg-check {
+    accent-color: var(--amber);
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+}
+
+/* ── EMPTY FILTERED STATE ── */
+.filtered-empty {
+    display: none;
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--dim);
+    font-size: 0.82rem;
+}
+</style>
+{% endblock %}
+
 {% block content %}
+
+<!-- Page Header -->
 <div class="page-header">
     <div class="page-header-left">
         <div class="page-label">Registration Management</div>
         <h1>Registrations</h1>
-        <p class="page-meta">Review and manage team registrations across your tournaments</p>
+        <p class="page-meta">Review and approve team registrations across your tournaments</p>
     </div>
     <div class="btn-group">
         <a href="{% url 'team_create' %}" class="btn btn-primary">+ Register Team</a>
@@ -14,105 +222,268 @@
 </div>
 
 {% if registrations %}
-    <!-- Stats row -->
-    <div class="stats-grid" style="margin-bottom:24px;">
-        <div class="stat-card">
-            <div class="stat-number">{{ total_registrations }}</div>
-            <div class="stat-label">Total</div>
-        </div>
-        <div class="stat-card" style="border-left-color:var(--amber);">
-            <div class="stat-number">{{ pending_count }}</div>
-            <div class="stat-label">Pending</div>
-        </div>
-        <div class="stat-card" style="border-left-color:var(--green);">
-            <div class="stat-number">{{ approved_count }}</div>
-            <div class="stat-label">Approved</div>
-        </div>
-        <div class="stat-card" style="border-left-color:var(--red);">
-            <div class="stat-number">{{ rejected_count }}</div>
-            <div class="stat-label">Rejected</div>
-        </div>
+
+<!-- Stats Row -->
+<div class="stats-grid" style="margin-bottom: 24px;">
+    <div class="stat-card">
+        <div class="stat-number">{{ total_registrations }}</div>
+        <div class="stat-label">Total</div>
+    </div>
+    <div class="stat-card" style="border-left-color: var(--amber);">
+        <div class="stat-number" id="statPending">{{ pending_count }}</div>
+        <div class="stat-label">Pending</div>
+    </div>
+    <div class="stat-card" style="border-left-color: var(--green);">
+        <div class="stat-number" id="statApproved">{{ approved_count }}</div>
+        <div class="stat-label">Approved</div>
+    </div>
+    <div class="stat-card" style="border-left-color: var(--red);">
+        <div class="stat-number" id="statRejected">{{ rejected_count }}</div>
+        <div class="stat-label">Rejected</div>
     </div>
 </div>
 
-    <div class="table-wrap">
-        <table>
-            <thead>
-                <tr>
-                    <th>Team</th>
-                    <th>Captain</th>
-                    <th>Tournament</th>
-                    <th>Registered</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for registration in registrations %}
-                    <tr>
-                        <td>
-                            <span style="font-family:'Rajdhani',sans-serif; font-weight:600; color:var(--wire); text-transform:uppercase; letter-spacing:0.03em;">
-                                {{ registration.team.name }}
-                            </span>
-                        </td>
-                        <td class="text-muted">{{ registration.team.captain_name }}</td>
-                        <td>
-                            <a href="{% url 'tournament_detail' registration.tournament.id %}" style="color:var(--pale); text-decoration:none; font-size:0.82rem;">
-                                {{ registration.tournament.name }}
-                            </a>
-                        </td>
-                        <td class="mono text-muted">{{ registration.created_at|date:"d M Y" }}</td>
-                        <td><span class="badge badge-{{ registration.status }}">{{ registration.status }}</span></td>
-                        <td>
+<!-- Filter Tabs -->
+<div class="reg-filters">
+    <button class="reg-filter-btn active" data-filter="all" onclick="filterRows('all', this)">
+        All <span class="count-pip">{{ total_registrations }}</span>
+    </button>
+    <button class="reg-filter-btn" data-filter="pending" onclick="filterRows('pending', this)">
+        Pending <span class="count-pip">{{ pending_count }}</span>
+    </button>
+    <button class="reg-filter-btn" data-filter="approved" onclick="filterRows('approved', this)">
+        Approved <span class="count-pip">{{ approved_count }}</span>
+    </button>
+    <button class="reg-filter-btn" data-filter="rejected" onclick="filterRows('rejected', this)">
+        Rejected <span class="count-pip">{{ rejected_count }}</span>
+    </button>
+</div>
+
+<!-- Bulk Action Bar (shown only when pending rows visible) -->
+{% if pending_count > 0 %}
+<div class="bulk-bar" id="bulkBar">
+    <span class="bulk-bar-label" id="bulkLabel">Bulk Actions</span>
+    <form method="post" action="{% url 'bulk_approve_registrations' %}" style="margin:0;" id="bulkForm">
+        {% csrf_token %}
+        <input type="hidden" name="page" value="{{ page_obj.number }}">
+        <!-- hidden inputs populated by JS -->
+        <button type="submit" class="btn-approve" id="bulkApproveBtn" disabled>
+            &#10003; Approve Selected
+        </button>
+    </form>
+    <button class="btn-reopen" onclick="toggleSelectAll()">Select All Pending</button>
+</div>
+{% endif %}
+
+<!-- Registrations Table -->
+<div class="table-wrap">
+    <table id="regTable">
+        <thead>
+            <tr>
+                {% if pending_count > 0 %}<th style="width:32px;"></th>{% endif %}
+                <th>Team</th>
+                <th>Captain</th>
+                <th>Tournament</th>
+                <th>Registered</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for registration in registrations %}
+            <tr class="reg-row status-{{ registration.status }}"
+                data-status="{{ registration.status }}"
+                data-reg-id="{{ registration.id }}">
+
+                <!-- Checkbox (pending only) -->
+                {% if pending_count > 0 %}
+                <td style="text-align:center;">
+                    {% if registration.status == "pending" and not registration.tournament.matches.exists %}
+                    <input type="checkbox"
+                           class="reg-check pending-check"
+                           data-id="{{ registration.id }}"
+                           onchange="updateBulkBar()">
+                    {% endif %}
+                </td>
+                {% endif %}
+
+                <!-- Team Name -->
+                <td>
+                    <div class="team-name-cell">{{ registration.team.name }}</div>
+                    {% if registration.team.game_tag %}
+                    <div style="font-family:'Space Mono',monospace; font-size:0.52rem; color:var(--dim); margin-top:2px;">{{ registration.team.game_tag }}</div>
+                    {% endif %}
+                </td>
+
+                <td class="text-muted">{{ registration.team.captain_name }}</td>
+
+                <!-- Tournament -->
+                <td>
+                    <a href="{% url 'tournament_detail' registration.tournament.id %}" class="tournament-link">
+                        {{ registration.tournament.name }}
+                    </a>
+                    {% if registration.tournament.matches.exists %}
+                    <div class="locked-note">&#128274; bracket locked</div>
+                    {% endif %}
+                </td>
+
+                <td class="mono text-muted" style="font-size:0.75rem;">{{ registration.created_at|date:"d M Y" }}</td>
+
+                <!-- Status Badge -->
+                <td>
+                    <span class="badge badge-{{ registration.status }}">{{ registration.status }}</span>
+                    {% if registration.status == "approved" and registration.approved_at %}
+                    <div style="font-family:'Space Mono',monospace; font-size:0.48rem; color:var(--dim); margin-top:3px;">{{ registration.approved_at|date:"d M, H:i" }}</div>
+                    {% endif %}
+                </td>
+
+                <!-- Actions -->
+                <td>
+                    <div class="action-cell">
+                        {% if registration.tournament.matches.exists %}
+                            <span class="locked-note">Actions locked</span>
+                        {% else %}
                             {% if registration.status == "pending" %}
-                                <div class="btn-group">
-                                    <form method="post" action="{% url 'approve_registration' registration.id %}">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="page" value="{{ page_obj.number }}">
-                                        <button type="submit" class="btn btn-success btn-sm">Approve</button>
-                                    </form>
-                                    <form method="post" action="{% url 'reject_registration' registration.id %}">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="page" value="{{ page_obj.number }}">
-                                        <button type="submit" class="btn btn-danger btn-sm">Reject</button>
-                                    </form>
-                                </div>
-                                {% else %}
-                                <span class="text-muted text-sm">—</span>
-                                {% endif %}
-                                <a href="{% url 'team_players' team_id=registration.team.pk %}" class="btn btn-ghost btn-sm" style="margin-top: 4px;">Roster</a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+                            <form method="post" action="{% url 'approve_registration' registration.id %}" style="margin:0;">
+                                {% csrf_token %}
+                                <input type="hidden" name="page" value="{{ page_obj.number }}">
+                                <button type="submit" class="btn-approve">&#10003; Approve</button>
+                            </form>
+                            <form method="post" action="{% url 'reject_registration' registration.id %}" style="margin:0;">
+                                {% csrf_token %}
+                                <input type="hidden" name="page" value="{{ page_obj.number }}">
+                                <button type="submit" class="btn-reject">&#10007; Reject</button>
+                            </form>
+                            {% elif registration.status == "approved" %}
+                            <form method="post" action="{% url 'reject_registration' registration.id %}" style="margin:0;">
+                                {% csrf_token %}
+                                <input type="hidden" name="page" value="{{ page_obj.number }}">
+                                <button type="submit" class="btn-reject">&#10007; Reject</button>
+                            </form>
+                            {% elif registration.status == "rejected" %}
+                            <form method="post" action="{% url 'approve_registration' registration.id %}" style="margin:0;">
+                                {% csrf_token %}
+                                <input type="hidden" name="page" value="{{ page_obj.number }}">
+                                <button type="submit" class="btn-reopen">&#8635; Re-open</button>
+                            </form>
+                            {% endif %}
+                        {% endif %}
+
+                        <a href="{% url 'team_players' team_id=registration.team.pk %}" class="btn-roster">
+                            &#9632; Roster
+                        </a>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <p class="filtered-empty" id="filteredEmpty">No registrations match this filter.</p>
+</div>
+
 {% else %}
-    <div class="empty-state">
-        <div class="empty-state-icon">◈</div>
-        <h3>No registrations yet</h3>
-        <p>Register a team to a tournament to get started.</p>
-        <a href="{% url 'team_create' %}" class="btn btn-primary">Register a Team</a>
-    </div>
+<div class="empty-state">
+    <div class="empty-state-icon">&#9672;</div>
+    <h3>No registrations yet</h3>
+    <p>Teams register for your tournaments and appear here for approval.</p>
+    <a href="{% url 'team_create' %}" class="btn btn-primary">Register a Team</a>
+</div>
 {% endif %}
 
+<!-- Pagination -->
 {% if page_obj.paginator.num_pages > 1 %}
-    <div class="pagination">
-        <div class="btn-group" style="justify-content:center; margin-top:20px;">
-            {% if page_obj.has_previous %}
-                <a href="?page=1" class="btn btn-ghost btn-sm">First</a>
-                <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-secondary btn-sm">Previous</a>
-            {% endif %}
-
-            <span class="btn btn-ghost btn-sm">
-                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-            </span>
-
-            {% if page_obj.has_next %}
-                <a href="?page={{ page_obj.next_page_number }}" class="btn btn-secondary btn-sm">Next</a>
-                <a href="?page={{ page_obj.paginator.num_pages }}" class="btn btn-ghost btn-sm">Last</a>
-            {% endif %}
-        </div>
+<div class="pagination">
+    <div class="btn-group" style="justify-content:center; margin-top:20px;">
+        {% if page_obj.has_previous %}
+        <a href="?page=1" class="btn btn-ghost btn-sm">First</a>
+        <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-secondary btn-sm">Prev</a>
+        {% endif %}
+        <span class="btn btn-ghost btn-sm" style="cursor:default;">
+            {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+        </span>
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}" class="btn btn-secondary btn-sm">Next</a>
+        <a href="?page={{ page_obj.paginator.num_pages }}" class="btn btn-ghost btn-sm">Last</a>
+        {% endif %}
     </div>
+</div>
 {% endif %}
+
+<script>
+// ── FILTER ──
+function filterRows(status, btn) {
+    document.querySelectorAll('.reg-filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    const rows = document.querySelectorAll('.reg-row');
+    let visible = 0;
+    rows.forEach(row => {
+        const match = status === 'all' || row.dataset.status === status;
+        row.style.display = match ? '' : 'none';
+        if (match) visible++;
+    });
+
+    const empty = document.getElementById('filteredEmpty');
+    if (empty) empty.style.display = visible === 0 ? 'block' : 'none';
+
+    // Show/hide bulk bar only when pending filter or all
+    const bulkBar = document.getElementById('bulkBar');
+    if (bulkBar) {
+        bulkBar.classList.toggle('visible', status === 'all' || status === 'pending');
+    }
+
+    // Uncheck all when switching filters
+    document.querySelectorAll('.pending-check').forEach(c => c.checked = false);
+    updateBulkBar();
+}
+
+// ── BULK SELECT ──
+let allSelected = false;
+
+function toggleSelectAll() {
+    allSelected = !allSelected;
+    document.querySelectorAll('.pending-check').forEach(c => {
+        // only check visible rows
+        const row = c.closest('tr');
+        if (row && row.style.display !== 'none') {
+            c.checked = allSelected;
+        }
+    });
+    updateBulkBar();
+}
+
+function updateBulkBar() {
+    const checked = Array.from(document.querySelectorAll('.pending-check:checked'));
+    const btn = document.getElementById('bulkApproveBtn');
+    const label = document.getElementById('bulkLabel');
+    const form = document.getElementById('bulkForm');
+
+    if (!btn || !form) return;
+
+    // Remove old hidden inputs
+    form.querySelectorAll('input[name="registration_ids"]').forEach(i => i.remove());
+
+    checked.forEach(c => {
+        const inp = document.createElement('input');
+        inp.type = 'hidden';
+        inp.name = 'registration_ids';
+        inp.value = c.dataset.id;
+        form.appendChild(inp);
+    });
+
+    btn.disabled = checked.length === 0;
+    if (label) {
+        label.textContent = checked.length > 0
+            ? `${checked.length} team${checked.length > 1 ? 's' : ''} selected`
+            : 'Bulk Actions';
+    }
+}
+
+// Init bulk bar visibility
+document.addEventListener('DOMContentLoaded', function() {
+    const bulkBar = document.getElementById('bulkBar');
+    if (bulkBar) bulkBar.classList.add('visible');
+});
+</script>
+
 {% endblock %}
