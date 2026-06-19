@@ -840,9 +840,9 @@
     <div id="toast-container" aria-live="polite" aria-atomic="false"></div>
 
     <!-- Seed Django messages as JSON for the toast JS to consume -->
-    {% if messages %}
+    {%  if messages %}
     <script id="django-messages" type="application/json">
-    [{% for message in messages %}{"level":"{{ message.level_tag }}","text":{{ message|json_script:""|slice:"15:-9" }}}{% if not forloop.last %},{% endif %}{% endfor %}]
+    [{% for message in messages %}{"level":"{{ message.level_tag|escapejs }}","text":"{{ message.message|escapejs }}"}{% if not forloop.last %},{% endif %}{% endfor %}]
     </script>
     {% endif %}
 
@@ -852,7 +852,7 @@
 
     <script>
     (function () {
-        const ICONS = { success: '✓', error: '✕', warning: '⚠', info: 'ℹ' };
+        const ICONS = { success: '\u2713', error: '\u2715', warning: '\u26a0', info: '\u2139' };
         const DURATION = 4000;
 
         function showToast(level, text) {
@@ -860,7 +860,7 @@
             el.className = 'toast toast-' + (level || 'info');
             el.setAttribute('role', 'alert');
             el.innerHTML =
-                '<span class="toast-icon">' + (ICONS[level] || 'ℹ') + '</span>' +
+                '<span class="toast-icon">' + (ICONS[level] || '\u2139') + '</span>' +
                 '<span class="toast-body">' + text + '</span>' +
                 '<button class="toast-close" aria-label="Dismiss">&times;</button>' +
                 '<div class="toast-progress"></div>';
