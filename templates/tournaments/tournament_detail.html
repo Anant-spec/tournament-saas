@@ -27,8 +27,8 @@
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    min-width: 220px;
-    width: 220px;
+    min-width: 240px;
+    width: 240px;
     position: relative;
 }
 
@@ -91,7 +91,6 @@
     flex-shrink: 0;
 }
 
-/* scheduled time in header */
 .b-match-time {
     font-family: 'Space Mono', monospace;
     font-size: 0.5rem;
@@ -155,6 +154,133 @@
 
 .b-win-icon { font-size: 0.7rem; flex-shrink: 0; opacity: 0; }
 .b-team-row.is-winner .b-win-icon { opacity: 1; }
+
+/* ── ROSTER TOGGLE BUTTON ── */
+.b-roster-toggle {
+    width: 100%;
+    padding: 6px 10px;
+    background: transparent;
+    border: none;
+    border-top: 1px solid var(--rim);
+    color: var(--dim);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.52rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: color 0.15s, background 0.15s;
+}
+.b-roster-toggle:hover { color: var(--pale); background: rgba(255,255,255,0.03); }
+.b-roster-toggle .roster-arrow {
+    margin-left: auto;
+    font-size: 0.6rem;
+    transition: transform 0.2s ease;
+    color: var(--ghost);
+}
+.b-roster-toggle.open .roster-arrow { transform: rotate(180deg); }
+.b-roster-toggle .player-count-pill {
+    background: var(--rim);
+    color: var(--pale);
+    border-radius: 999px;
+    padding: 1px 6px;
+    font-size: 0.48rem;
+    letter-spacing: 0.05em;
+}
+
+/* ── ROSTER DRAWER ── */
+.b-roster-drawer {
+    display: none;
+    border-top: 1px solid var(--rim);
+    background: var(--panel);
+    overflow: hidden;
+}
+.b-roster-drawer.open {
+    display: block;
+    animation: drawerSlideIn 0.18s ease;
+}
+@keyframes drawerSlideIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.b-roster-team-block {
+    padding: 8px 10px;
+}
+.b-roster-team-block + .b-roster-team-block {
+    border-top: 1px solid rgba(42,50,72,0.5);
+}
+
+.b-roster-team-heading {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 5px;
+}
+.b-roster-team-heading .rth-name {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--wire);
+}
+.b-roster-team-heading .rth-seed {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.44rem;
+    color: var(--ghost);
+    border: 1px solid var(--rim);
+    border-radius: 3px;
+    padding: 1px 4px;
+}
+
+/* Player rows inside drawer */
+.b-player-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 0;
+}
+.b-player-ign {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 0.74rem;
+    color: var(--pale);
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.b-player-uid {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.44rem;
+    color: var(--ghost);
+    flex-shrink: 0;
+}
+.b-player-role {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.42rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 1px 5px;
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+.b-player-role.role-captain    { background: rgba(245,158,11,0.15); color: var(--amber); border: 1px solid rgba(245,158,11,0.25); }
+.b-player-role.role-player      { background: rgba(107,122,153,0.12); color: var(--dim); border: 1px solid var(--rim); }
+.b-player-role.role-substitute  { background: rgba(99,102,241,0.1); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.2); }
+
+.b-roster-empty {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.5rem;
+    color: var(--ghost);
+    padding: 4px 0;
+    font-style: italic;
+}
 
 /* ── REPORT FORM ── */
 .b-report-toggle {
@@ -477,6 +603,11 @@
 
                 <div class="b-round-matches">
                     {% for match in round_matches %}
+
+                    {# Collect player counts for the toggle pill #}
+                    {% with t1_players=match.team1.players.all t2_players=match.team2.players.all %}
+                    {% with total_players=t1_players|length|add:t2_players|length %}
+
                     <div class="b-match status-{{ match.status }}{% if not match.team1 and not match.team2 %} is-bye{% endif %}"
                          id="match-{{ match.id }}"
                          data-match="{{ match.id }}">
@@ -485,6 +616,7 @@
                         <div class="b-final-badge">Final</div>
                         {% endif %}
 
+                        <!-- Match Header -->
                         <div class="b-match-header">
                             <span class="b-match-number">M{{ match.match_number }}</span>
                             {% if match.scheduled_at %}
@@ -519,6 +651,67 @@
                             <span class="b-win-icon">&#10003;</span>
                         </div>
 
+                        <!-- Roster Toggle (only when at least one team has players) -->
+                        {% if match.team1 or match.team2 %}
+                        <button class="b-roster-toggle" onclick="toggleRoster(this)" aria-expanded="false">
+                            &#9776; Roster
+                            {% if total_players > 0 %}
+                            <span class="player-count-pill">{{ total_players }}p</span>
+                            {% endif %}
+                            <span class="roster-arrow">&#9660;</span>
+                        </button>
+
+                        <!-- Roster Drawer -->
+                        <div class="b-roster-drawer">
+
+                            {% if match.team1 %}
+                            <div class="b-roster-team-block">
+                                <div class="b-roster-team-heading">
+                                    <span class="rth-seed">T1</span>
+                                    <span class="rth-name">{{ match.team1.name }}</span>
+                                </div>
+                                {% if t1_players %}
+                                    {% for player in t1_players %}
+                                    <div class="b-player-row">
+                                        <span class="b-player-ign">{{ player.in_game_name }}</span>
+                                        {% if player.game_uid %}
+                                        <span class="b-player-uid">#{{ player.game_uid }}</span>
+                                        {% endif %}
+                                        <span class="b-player-role role-{{ player.role }}">{{ player.role }}</span>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="b-roster-empty">No players added yet</div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+
+                            {% if match.team2 %}
+                            <div class="b-roster-team-block">
+                                <div class="b-roster-team-heading">
+                                    <span class="rth-seed">T2</span>
+                                    <span class="rth-name">{{ match.team2.name }}</span>
+                                </div>
+                                {% if t2_players %}
+                                    {% for player in t2_players %}
+                                    <div class="b-player-row">
+                                        <span class="b-player-ign">{{ player.in_game_name }}</span>
+                                        {% if player.game_uid %}
+                                        <span class="b-player-uid">#{{ player.game_uid }}</span>
+                                        {% endif %}
+                                        <span class="b-player-role role-{{ player.role }}">{{ player.role }}</span>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="b-roster-empty">No players added yet</div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+
+                        </div>
+                        {% endif %}
+                        <!-- / Roster -->
+
                         <!-- Report form -->
                         {% if match.status != "completed" and match.team1 and match.team2 %}
                         <button class="b-report-toggle" onclick="toggleReport(this)">
@@ -546,6 +739,9 @@
                         {% endif %}
 
                     </div>
+
+                    {% endwith %}
+                    {% endwith %}
                     {% endfor %}
                 </div>
             </div>
@@ -564,13 +760,22 @@
 </div>
 
 <script>
+// ── ROSTER TOGGLE ──
+function toggleRoster(btn) {
+    const drawer = btn.nextElementSibling;
+    const isOpen = drawer.classList.contains('open');
+    drawer.classList.toggle('open', !isOpen);
+    btn.classList.toggle('open', !isOpen);
+    btn.setAttribute('aria-expanded', String(!isOpen));
+}
+
+// ── REPORT TOGGLE ──
 function toggleReport(btn) {
     const panel = btn.nextElementSibling;
     const isOpen = panel.classList.contains('open');
     document.querySelectorAll('.b-report-panel.open').forEach(p => {
         p.classList.remove('open');
-        const tb = p.previousElementSibling;
-        tb.innerHTML = '<span class="tog-icon">+</span> Report Result';
+        p.previousElementSibling.innerHTML = '<span class="tog-icon">+</span> Report Result';
     });
     if (!isOpen) {
         panel.classList.add('open');
@@ -578,6 +783,7 @@ function toggleReport(btn) {
     }
 }
 
+// ── SVG CONNECTORS ──
 document.addEventListener('DOMContentLoaded', function() {
     const canvas = document.getElementById('bracketCanvas');
     if (!canvas) return;
@@ -626,6 +832,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     drawConnectors();
+
+    // Redraw connectors when rosters open/close (they change card height)
+    document.querySelectorAll('.b-roster-toggle').forEach(btn => {
+        btn.addEventListener('click', () => setTimeout(drawConnectors, 220));
+    });
+
     window.addEventListener('resize', drawConnectors);
     const wrap = canvas.closest('.bracket-scroll-wrap');
     if (wrap) wrap.addEventListener('scroll', drawConnectors);

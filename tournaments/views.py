@@ -118,9 +118,17 @@ def tournament_detail(request, pk):
         organization__owner=request.user
     )
 
-    matches = tournament.matches.all().order_by("round_number", "match_number")
-    registrations = tournament.registrations.select_related("team").all()
+    matches = (
+        tournament.matches
+        .select_related("team1", "team2", "winner", "next_match")
+        .prefetch_related(
+            "team1__players",
+            "team2__players",
+        )
+        .order_by("round_number", "match_number")
+    )
 
+    registrations = tournament.registrations.select_related("team").all()
     approved_count = registrations.filter(status="approved").count()
 
     grouped_matches = {}
