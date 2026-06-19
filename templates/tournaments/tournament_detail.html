@@ -20,7 +20,7 @@
     align-items: stretch;
     min-width: max-content;
     padding: 24px 8px;
-    position: relative; /* required for absolute SVG overlay */
+    position: relative; /* anchor for absolute SVG overlay */
 }
 
 .b-round {
@@ -63,10 +63,11 @@
     background: var(--plate);
     border: 1px solid var(--rim);
     border-radius: 8px;
-    overflow: hidden;
+    overflow: visible; /* allow SVG connectors to overlap */
     margin: 6px 8px;
     transition: border-color 0.15s, box-shadow 0.15s;
     flex-shrink: 0;
+    z-index: 1; /* sit above SVG layer */
 }
 .b-match:hover { border-color: var(--ghost); box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
 .b-match.status-completed { border-color: rgba(16,185,129,0.25); }
@@ -79,6 +80,7 @@
     padding: 6px 10px 5px;
     border-bottom: 1px solid var(--rim);
     background: var(--panel);
+    border-radius: 7px 7px 0 0;
     gap: 6px;
 }
 
@@ -178,11 +180,12 @@
 .b-roster-toggle .roster-arrow {
     margin-left: auto;
     font-size: 0.6rem;
-    transition: transform 0.2s ease;
+    transition: transform 0.22s ease;
     color: var(--ghost);
-    display: inline-block; /* ensure transform works */
+    display: inline-block;
+    line-height: 1;
 }
-.b-roster-toggle.open .roster-arrow { transform: rotate(180deg); }
+.b-roster-toggle[aria-expanded="true"] .roster-arrow { transform: rotate(180deg); }
 .b-roster-toggle .player-count-pill {
     background: var(--rim);
     color: var(--pale);
@@ -201,7 +204,7 @@
     transition: max-height 0.22s ease, border-top-width 0.22s;
 }
 .b-roster-drawer.open {
-    max-height: 600px; /* generous ceiling so content never clips */
+    max-height: 600px;
     border-top-width: 1px;
 }
 
@@ -271,9 +274,22 @@
     align-items: center;
     gap: 6px;
     transition: color 0.15s, background 0.15s;
+    min-height: 34px;
 }
 .b-report-toggle:hover { color: var(--amber); background: var(--amber-bg); }
-.b-report-toggle[data-state="open"] { color: var(--pale); }
+.b-report-toggle[aria-expanded="true"] { color: var(--pale); }
+
+/* Icon span inside report toggle — never mutate innerHTML, toggle class instead */
+.b-report-toggle .tog-icon {
+    font-size: 0.8rem;
+    line-height: 1;
+    font-style: normal;
+    flex-shrink: 0;
+    transition: transform 0.18s ease;
+}
+.b-report-toggle[aria-expanded="true"] .tog-icon { transform: rotate(45deg); }
+
+.b-report-label { flex: 1; }
 
 .b-report-panel {
     max-height: 0;
@@ -324,6 +340,7 @@
     text-transform: uppercase;
     cursor: pointer;
     transition: background 0.15s, border-color 0.15s;
+    min-height: 34px;
 }
 .b-submit-btn:hover { background: rgba(16,185,129,0.2); border-color: rgba(16,185,129,0.4); }
 
@@ -341,6 +358,7 @@
     text-transform: uppercase;
     padding: 2px 6px;
     border-radius: 0 8px 0 6px;
+    z-index: 2;
 }
 
 /* ── CHAMPION BANNER ── */
@@ -368,13 +386,14 @@
     border-radius: 10px;
     padding: 18px 22px;
     margin-bottom: 4px;
+    flex-wrap: wrap;
 }
 .gen-bracket-cta.ready {
     border-color: rgba(245,158,11,0.3);
     background: linear-gradient(135deg, rgba(245,158,11,0.06), transparent);
 }
 .gen-bracket-icon { font-size: 1.6rem; flex-shrink: 0; }
-.gen-bracket-text { flex: 1; }
+.gen-bracket-text { flex: 1; min-width: 140px; }
 .gen-bracket-text strong {
     display: block;
     font-family: 'Rajdhani', sans-serif;
@@ -401,6 +420,7 @@
     white-space: nowrap;
     transition: background 0.15s;
     flex-shrink: 0;
+    min-height: 38px;
 }
 .gen-bracket-btn:hover { background: var(--amber-hot); }
 .gen-bracket-btn:disabled { background: var(--ghost); color: var(--dim); cursor: not-allowed; }
@@ -416,12 +436,10 @@
     justify-content: center;
     padding: 20px;
     backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
 }
 .modal-backdrop.open { display: flex; animation: modalFadeIn 0.15s ease; }
-@keyframes modalFadeIn {
-    from { opacity: 0; }
-    to   { opacity: 1; }
-}
+@keyframes modalFadeIn { from { opacity:0; } to { opacity:1; } }
 
 .modal-box {
     background: var(--plate);
@@ -434,8 +452,8 @@
     box-shadow: 0 24px 64px rgba(0,0,0,0.6);
 }
 @keyframes modalSlideUp {
-    from { opacity: 0; transform: translateY(12px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from { opacity:0; transform:translateY(12px); }
+    to   { opacity:1; transform:translateY(0); }
 }
 
 .modal-header {
@@ -447,16 +465,12 @@
     background: rgba(239,68,68,0.06);
 }
 .modal-danger-icon {
-    width: 36px;
-    height: 36px;
+    width: 36px; height: 36px;
     border-radius: 50%;
     background: rgba(239,68,68,0.15);
     border: 1px solid rgba(239,68,68,0.3);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1rem;
-    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; flex-shrink: 0;
 }
 .modal-title {
     font-family: 'Rajdhani', sans-serif;
@@ -466,11 +480,7 @@
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
-.modal-subtitle {
-    font-size: 0.72rem;
-    color: var(--dim);
-    margin-top: 1px;
-}
+.modal-subtitle { font-size: 0.72rem; color: var(--dim); margin-top: 1px; }
 
 .modal-body { padding: 18px 20px; }
 
@@ -529,8 +539,9 @@
     letter-spacing: 0.03em;
     outline: none;
     transition: border-color 0.15s;
+    min-height: 42px;
 }
-.modal-confirm-input:focus { border-color: rgba(239,68,68,0.5); }
+.modal-confirm-input:focus { border-color: rgba(239,68,68,0.5); box-shadow: 0 0 0 3px rgba(239,68,68,0.08); }
 .modal-confirm-input.valid { border-color: rgba(239,68,68,0.6); background: rgba(239,68,68,0.04); }
 
 .modal-footer {
@@ -554,6 +565,7 @@
     text-transform: uppercase;
     cursor: pointer;
     transition: border-color 0.13s, color 0.13s;
+    min-height: 36px;
 }
 .btn-modal-cancel:hover { border-color: var(--ghost); color: var(--pale); }
 
@@ -570,6 +582,7 @@
     text-transform: uppercase;
     cursor: pointer;
     transition: background 0.13s, border-color 0.13s;
+    min-height: 36px;
 }
 .btn-modal-confirm:hover:not(:disabled) { background: rgba(239,68,68,0.22); border-color: rgba(239,68,68,0.55); }
 .btn-modal-confirm:disabled { opacity: 0.35; cursor: not-allowed; }
@@ -578,15 +591,14 @@
 .bracket-svg-connectors {
     position: absolute;
     top: 0; left: 0;
-    width: 100%; height: 100%;
     pointer-events: none;
     overflow: visible;
-    z-index: 0; /* sit behind match cards */
+    z-index: 0; /* sit behind match cards (z-index:1) */
 }
 
-/* ══════════════════════════════════════════
+/* ════════════════════════════════════════
    STATS DASHBOARD
-══════════════════════════════════════════ */
+════════════════════════════════════════ */
 .stats-dashboard {
     background: var(--plate);
     border: 1px solid var(--rim);
@@ -622,22 +634,22 @@
     background: var(--amber);
 }
 
-/* ── KPI ROW ── */
+/* KPI Row */
 .stats-kpi-row {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     border-bottom: 1px solid var(--rim);
 }
-
 @media (max-width: 640px) {
     .stats-kpi-row { grid-template-columns: repeat(2, 1fr); }
     .stats-kpi-item:nth-child(2) { border-right: none; }
+    .stats-kpi-item:nth-child(3) { border-top: 1px solid var(--rim); }
+    .stats-kpi-item:nth-child(4) { border-top: 1px solid var(--rim); }
 }
 
 .stats-kpi-item {
     padding: 18px 20px;
     border-right: 1px solid var(--rim);
-    position: relative;
 }
 .stats-kpi-item:last-child { border-right: none; }
 
@@ -650,10 +662,9 @@
     margin-bottom: 5px;
     font-variant-numeric: tabular-nums;
 }
-.stats-kpi-value.green  { color: #34d399; }
-.stats-kpi-value.amber  { color: var(--amber); }
-/* Fix: was referencing --cyan which is undefined in base palette; use explicit value */
-.stats-kpi-value.cyan   { color: #22d3ee; }
+.stats-kpi-value.green { color: #34d399; }
+.stats-kpi-value.amber { color: var(--amber); }
+.stats-kpi-value.cyan  { color: #22d3ee; }
 
 .stats-kpi-label {
     font-family: 'Space Mono', monospace;
@@ -663,7 +674,7 @@
     text-transform: uppercase;
 }
 
-/* ── PROGRESS SECTION ── */
+/* Progress Section */
 .stats-progress-section {
     padding: 18px 20px;
     border-bottom: 1px solid var(--rim);
@@ -674,6 +685,8 @@
     align-items: center;
     justify-content: space-between;
     margin-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 6px;
 }
 
 .stats-progress-label {
@@ -708,16 +721,9 @@
     transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.stats-round-bars {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-}
+.stats-round-bars { display: flex; gap: 8px; flex-wrap: wrap; }
 
-.stats-round-bar-item {
-    flex: 1;
-    min-width: 60px;
-}
+.stats-round-bar-item { flex: 1; min-width: 60px; }
 
 .stats-round-bar-label {
     font-family: 'Space Mono', monospace;
@@ -748,10 +754,8 @@
     transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* ── TEAM WIN RATES ── */
-.stats-team-section {
-    padding: 18px 20px;
-}
+/* Team Win Rates */
+.stats-team-section { padding: 18px 20px; }
 
 .stats-team-grid {
     display: grid;
@@ -804,10 +808,10 @@
     border-radius: 999px;
     font-variant-numeric: tabular-nums;
 }
-.pill-high   { background: rgba(16,185,129,0.12); color: #34d399;   border: 1px solid rgba(16,185,129,0.25); }
-.pill-mid    { background: rgba(245,158,11,0.10); color: var(--amber); border: 1px solid rgba(245,158,11,0.2); }
-.pill-low    { background: rgba(239,68,68,0.08);  color: #f87171;    border: 1px solid rgba(239,68,68,0.18); }
-.pill-none   { background: var(--rim); color: var(--ghost); border: 1px solid transparent; font-size: 0.6rem; }
+.pill-high { background: rgba(16,185,129,0.12);  color: #34d399;        border: 1px solid rgba(16,185,129,0.25); }
+.pill-mid  { background: rgba(245,158,11,0.10);  color: var(--amber);   border: 1px solid rgba(245,158,11,0.2); }
+.pill-low  { background: rgba(239,68,68,0.08);   color: #f87171;        border: 1px solid rgba(239,68,68,0.18); }
+.pill-none { background: var(--rim); color: var(--ghost); border: 1px solid transparent; font-size: 0.6rem; }
 
 .stats-team-bar-track {
     flex-shrink: 0;
@@ -828,7 +832,7 @@
 
 {% block content %}
 
-{# ── Embed tournament name safely for JS use ── #}
+{# Embed tournament name safely for JS — rendered before the script block #}
 {{ tournament.name|json_script:"tn-data" }}
 
 <!-- Page Header -->
@@ -865,7 +869,6 @@
     </div>
 </div>
 
-<!-- Champion Banner -->
 {% if tournament.champion %}
 <div class="champion-banner">
     <div class="champion-trophy">&#127942;</div>
@@ -878,16 +881,14 @@
 
 <hr>
 
-<!-- ══ STATS DASHBOARD ══ -->
+<!-- STATS DASHBOARD -->
 {% if stats_has_data %}
 <div class="stats-dashboard">
-
     <div class="stats-dashboard-header">
         <div class="stats-dashboard-title">Tournament Stats</div>
         <span class="mono text-muted">{{ tournament.get_format_type_display }}</span>
     </div>
 
-    <!-- KPI Row -->
     <div class="stats-kpi-row">
         <div class="stats-kpi-item">
             <div class="stats-kpi-value">{{ stats_total }}</div>
@@ -907,17 +908,15 @@
         </div>
     </div>
 
-    <!-- Bracket Progress Bar -->
     <div class="stats-progress-section">
         <div class="stats-progress-header">
             <span class="stats-progress-label">Bracket Progress</span>
             <span class="stats-progress-pct">{{ stats_done }} / {{ stats_total }} matches played</span>
         </div>
         <div class="stats-progress-track">
-            <div class="stats-progress-fill" style="width: {{ stats_progress }}%;"></div>
+            <div class="stats-progress-fill" style="width:{{ stats_progress }}%;"></div>
         </div>
 
-        <!-- Per-round mini bars -->
         {% if stats_rounds %}
         <div class="stats-round-bars">
             {% for r in stats_rounds %}
@@ -932,7 +931,7 @@
                     <span>{{ r.done }}/{{ r.total }}</span>
                 </div>
                 <div class="stats-round-track">
-                    <div class="stats-round-fill" style="width: {{ r.pct }}%;"></div>
+                    <div class="stats-round-fill" style="width:{{ r.pct }}%;"></div>
                 </div>
             </div>
             {% endfor %}
@@ -940,28 +939,22 @@
         {% endif %}
     </div>
 
-    <!-- Team Win Rates -->
     {% if stats_teams %}
     <div class="stats-team-section">
-        <div style="font-family:'Space Mono',monospace; font-size:0.58rem; color:var(--dim); letter-spacing:0.12em; text-transform:uppercase; margin-bottom:12px;">
-            Team Performance
-        </div>
+        <div style="font-family:'Space Mono',monospace;font-size:0.58rem;color:var(--dim);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:12px;">Team Performance</div>
         <div class="stats-team-grid">
             {% for team in stats_teams %}
-            <div class="stats-team-row {% if tournament.champion and tournament.champion.name == team.name %}is-champion{% endif %}">
+            <div class="stats-team-row{% if tournament.champion and tournament.champion.name == team.name %} is-champion{% endif %}">
                 <div class="stats-team-info">
                     <div class="stats-team-name">{{ team.name }}</div>
                     <div class="stats-team-record">
-                        {% if team.played > 0 %}
-                        {{ team.wins }}W &ndash; {{ team.losses }}L
-                        {% else %}
-                        No matches yet
-                        {% endif %}
+                        {% if team.played > 0 %}{{ team.wins }}W &ndash; {{ team.losses }}L
+                        {% else %}No matches yet{% endif %}
                     </div>
                 </div>
                 {% if team.played > 0 %}
                 <div class="stats-team-bar-track">
-                    <div class="stats-team-bar-fill" style="width: {{ team.win_pct }}%;"></div>
+                    <div class="stats-team-bar-fill" style="width:{{ team.win_pct }}%;"></div>
                 </div>
                 {% endif %}
                 {% if team.win_pct == None %}
@@ -978,12 +971,9 @@
         </div>
     </div>
     {% endif %}
-
 </div>
 <hr>
 {% endif %}
-<!-- ══ END STATS DASHBOARD ══ -->
-
 
 <!-- Registered Teams -->
 <div class="section">
@@ -1007,9 +997,7 @@
                 {% for registration in registrations %}
                 <tr>
                     <td class="mono text-muted">{{ forloop.counter }}</td>
-                    <td style="font-family:'Rajdhani',sans-serif; font-weight:600; color:var(--wire); text-transform:uppercase; letter-spacing:0.03em;">
-                        {{ registration.team.name }}
-                    </td>
+                    <td style="font-family:'Rajdhani',sans-serif;font-weight:600;color:var(--wire);text-transform:uppercase;letter-spacing:0.03em;">{{ registration.team.name }}</td>
                     <td class="text-muted">{{ registration.team.captain_name }}</td>
                     <td><span class="badge badge-{{ registration.status }}">{{ registration.status }}</span></td>
                 </tr>
@@ -1065,7 +1053,6 @@
     {% endif %}
 
     {% else %}
-    <!-- Bracket Canvas -->
     <div class="bracket-scroll-wrap">
         <div class="bracket-canvas" id="bracketCanvas">
 
@@ -1077,8 +1064,7 @@
                     {% if round_number == total %}&#127942; Final
                     {% elif round_number == total|add:"-1" %}Semi&#8209;Final
                     {% elif round_number == total|add:"-2" %}Quarter&#8209;Final
-                    {% else %}Round {{ round_number }}
-                    {% endif %}
+                    {% else %}Round {{ round_number }}{% endif %}
                 </div>
 
                 <div class="b-round-matches">
@@ -1112,12 +1098,13 @@
                         </div>
 
                         {% if match.team1 or match.team2 %}
+                        {# aria-expanded drives the arrow rotation via CSS — no JS class needed #}
                         <button class="b-roster-toggle" onclick="toggleRoster(this)" aria-expanded="false">
                             &#9776; Roster
                             {% if total_players > 0 %}<span class="player-count-pill">{{ total_players }}p</span>{% endif %}
-                            <span class="roster-arrow">&#9660;</span>
+                            <span class="roster-arrow" aria-hidden="true">&#9660;</span>
                         </button>
-                        <div class="b-roster-drawer">
+                        <div class="b-roster-drawer" hidden>
                             {% if match.team1 %}
                             <div class="b-roster-team-block">
                                 <div class="b-roster-team-heading">
@@ -1152,8 +1139,10 @@
                         {% endif %}
 
                         {% if match.status != "completed" and match.team1 and match.team2 %}
-                        <button class="b-report-toggle" onclick="toggleReport(this)" data-state="closed">
-                            <span class="tog-icon">+</span> Report Result
+                        {# aria-expanded drives icon rotation; tog-icon text never mutated #}
+                        <button class="b-report-toggle" onclick="toggleReport(this)" aria-expanded="false">
+                            <span class="tog-icon" aria-hidden="true">+</span>
+                            <span class="b-report-label">Report Result</span>
                         </button>
                         <div class="b-report-panel">
                             <form method="post" action="{% url 'report_match_result' match.id %}">
@@ -1170,9 +1159,9 @@
                             </form>
                         </div>
                         {% elif match.status == "completed" and match.winner %}
-                        <div style="padding:6px 10px; border-top:1px solid var(--rim); display:flex; align-items:center; gap:6px;">
+                        <div style="padding:6px 10px;border-top:1px solid var(--rim);display:flex;align-items:center;gap:6px;">
                             <span style="font-size:0.65rem;">&#127942;</span>
-                            <span style="font-family:'Rajdhani',sans-serif; font-size:0.75rem; font-weight:700; color:#34d399; text-transform:uppercase; letter-spacing:0.06em;">{{ match.winner.name }} advances</span>
+                            <span style="font-family:'Rajdhani',sans-serif;font-size:0.75rem;font-weight:700;color:#34d399;text-transform:uppercase;letter-spacing:0.06em;">{{ match.winner.name }} advances</span>
                         </div>
                         {% endif %}
 
@@ -1191,13 +1180,15 @@
 
 </div>
 
-<!-- ── RESET BRACKET MODAL ── -->
+<!-- RESET BRACKET MODAL -->
 {% if tournament.matches.exists %}
-<div class="modal-backdrop" id="resetModal" onclick="handleBackdropClick(event)">
-    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+<div class="modal-backdrop" id="resetModal"
+     role="dialog" aria-modal="true" aria-labelledby="modalTitle"
+     onclick="handleBackdropClick(event)">
+    <div class="modal-box">
 
         <div class="modal-header">
-            <div class="modal-danger-icon">&#9888;</div>
+            <div class="modal-danger-icon" aria-hidden="true">&#9888;</div>
             <div>
                 <div class="modal-title" id="modalTitle">Reset Bracket</div>
                 <div class="modal-subtitle">{{ tournament.name }}</div>
@@ -1222,6 +1213,7 @@
                 class="modal-confirm-input"
                 placeholder="{{ tournament.name }}"
                 autocomplete="off"
+                spellcheck="false"
                 oninput="checkConfirmName(this)"
             >
         </div>
@@ -1242,24 +1234,27 @@
 {% endif %}
 
 <script>
-// ── RESET MODAL ──
-// json_script tag is rendered above in the template body;
-// read it here after DOM parse — always defined at this point.
+// ── RESET MODAL ──────────────────────────────────────────────────────────────
+// json_script renders before this <script> tag so getElementById is always safe.
 (function () {
     var el = document.getElementById('tn-data');
     window._TNAME = el ? JSON.parse(el.textContent) : '';
 })();
 
 function openResetModal() {
-    document.getElementById('resetModal').classList.add('open');
+    var modal = document.getElementById('resetModal');
+    if (!modal) return;
     document.getElementById('confirmNameInput').value = '';
     document.getElementById('confirmResetBtn').disabled = true;
     document.getElementById('confirmNameHidden').value = '';
+    modal.classList.add('open');
+    // Trap focus inside modal
     setTimeout(function () { document.getElementById('confirmNameInput').focus(); }, 80);
 }
 
 function closeResetModal() {
-    document.getElementById('resetModal').classList.remove('open');
+    var modal = document.getElementById('resetModal');
+    if (modal) modal.classList.remove('open');
 }
 
 function handleBackdropClick(e) {
@@ -1269,55 +1264,67 @@ function handleBackdropClick(e) {
 function checkConfirmName(input) {
     var matched = input.value === window._TNAME;
     input.classList.toggle('valid', matched);
-    var btn    = document.getElementById('confirmResetBtn');
-    var hidden = document.getElementById('confirmNameHidden');
-    btn.disabled   = !matched;
-    hidden.value   = matched ? input.value : '';
+    document.getElementById('confirmResetBtn').disabled = !matched;
+    document.getElementById('confirmNameHidden').value = matched ? input.value : '';
 }
 
 document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') closeResetModal();
 });
 
-// ── ROSTER TOGGLE ──
+// ── ROSTER TOGGLE ─────────────────────────────────────────────────────────────
+// Uses aria-expanded for both accessibility and CSS-driven arrow rotation.
+// The drawer uses the `hidden` attribute so it is display:none until opened,
+// then we remove `hidden` and toggle the `.open` class for the max-height animation.
 function toggleRoster(btn) {
     var drawer = btn.nextElementSibling;
-    var isOpen = drawer.classList.contains('open');
-    drawer.classList.toggle('open', !isOpen);
-    btn.classList.toggle('open', !isOpen);
-    btn.setAttribute('aria-expanded', String(!isOpen));
-    // Redraw connectors after drawer animation settles
+    var isOpen = btn.getAttribute('aria-expanded') === 'true';
+    var opening = !isOpen;
+
+    if (opening) {
+        drawer.removeAttribute('hidden');
+        // Allow the browser one frame to register the display change before animating
+        requestAnimationFrame(function () {
+            requestAnimationFrame(function () {
+                drawer.classList.add('open');
+            });
+        });
+    } else {
+        drawer.classList.remove('open');
+        // Re-add hidden after transition so screen readers skip it
+        drawer.addEventListener('transitionend', function handler() {
+            drawer.removeAttribute('hidden'); // keep accessible when partially open on re-toggle
+            drawer.removeEventListener('transitionend', handler);
+        });
+    }
+
+    btn.setAttribute('aria-expanded', String(opening));
+    // Redraw connectors after drawer animation settles (220ms transition)
     setTimeout(drawConnectors, 240);
 }
 
-// ── REPORT TOGGLE ──
-// Uses data-state attribute instead of innerHTML mutation
-// so embedded icons/text are never clobbered.
+// ── REPORT TOGGLE ─────────────────────────────────────────────────────────────
+// Icon rotation is CSS-driven (aria-expanded="true" rotates .tog-icon 45deg).
+// We never mutate innerHTML so embedded spans are never clobbered.
 function toggleReport(btn) {
     var panel  = btn.nextElementSibling;
-    var isOpen = panel.classList.contains('open');
+    var isOpen = btn.getAttribute('aria-expanded') === 'true';
 
-    // Close all open report panels first
-    document.querySelectorAll('.b-report-panel.open').forEach(function (p) {
-        p.classList.remove('open');
-        var tog = p.previousElementSibling;
-        if (tog) {
-            tog.setAttribute('data-state', 'closed');
-            tog.querySelector('.tog-icon').textContent = '+';
-            tog.childNodes[tog.childNodes.length - 1].textContent = ' Report Result';
-        }
+    // Close every other open report panel first
+    document.querySelectorAll('.b-report-toggle[aria-expanded="true"]').forEach(function (other) {
+        if (other === btn) return;
+        other.setAttribute('aria-expanded', 'false');
+        var otherPanel = other.nextElementSibling;
+        if (otherPanel) otherPanel.classList.remove('open');
     });
 
-    if (!isOpen) {
-        panel.classList.add('open');
-        btn.setAttribute('data-state', 'open');
-        btn.querySelector('.tog-icon').textContent = '\u2212'; // minus sign
-        btn.childNodes[btn.childNodes.length - 1].textContent = ' Cancel';
-    }
+    var opening = !isOpen;
+    btn.setAttribute('aria-expanded', String(opening));
+    panel.classList.toggle('open', opening);
 }
 
-// ── SVG CONNECTORS ──
-// Exposed at module scope so toggleRoster() can call it.
+// ── SVG CONNECTORS ────────────────────────────────────────────────────────────
+// Exposed at module scope so toggleRoster() and resize handler can call it.
 var drawConnectors = function () {};
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -1330,22 +1337,22 @@ document.addEventListener('DOMContentLoaded', function () {
     var wrap = canvas.closest('.bracket-scroll-wrap');
 
     drawConnectors = function () {
+        // Remove previous SVG overlay
         var old = canvas.querySelector('.bracket-svg-connectors');
         if (old) old.remove();
 
         var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         svg.classList.add('bracket-svg-connectors');
 
-        // Size SVG to the full scrollable canvas extent
-        var cW = canvas.scrollWidth;
-        var cH = canvas.scrollHeight;
-        svg.setAttribute('width',  cW);
-        svg.setAttribute('height', cH);
+        // Size SVG to the full scrollable canvas extent so connectors are never clipped
+        svg.setAttribute('width',  canvas.scrollWidth);
+        svg.setAttribute('height', canvas.scrollHeight);
         svg.style.cssText = 'position:absolute;top:0;left:0;pointer-events:none;overflow:visible;z-index:0;';
         canvas.appendChild(svg);
 
         var canvasRect = canvas.getBoundingClientRect();
-        // scrollLeft/Top of the wrap offsets viewport coords back to canvas-local coords
+        // getBoundingClientRect() is viewport-relative.
+        // Adding wrap.scrollLeft converts it to canvas-local coords.
         var sl = wrap ? wrap.scrollLeft : 0;
         var st = wrap ? wrap.scrollTop  : 0;
 
@@ -1361,7 +1368,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 var fR = from.getBoundingClientRect();
                 var tR = to.getBoundingClientRect();
 
-                // Convert viewport-relative coords to canvas-local coords
                 var x1 = fR.right  - canvasRect.left + sl;
                 var y1 = fR.top    - canvasRect.top  + st + fR.height / 2;
                 var x2 = tR.left   - canvasRect.left + sl;
@@ -1369,12 +1375,19 @@ document.addEventListener('DOMContentLoaded', function () {
                 var mx = (x1 + x2) / 2;
 
                 var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                path.setAttribute('d', 'M ' + x1 + ' ' + y1 +
-                    ' C ' + mx + ' ' + y1 + ', ' + mx + ' ' + y2 + ', ' + x2 + ' ' + y2);
+                path.setAttribute('d',
+                    'M ' + x1 + ' ' + y1 +
+                    ' C ' + mx + ' ' + y1 +
+                    ', '  + mx + ' ' + y2 +
+                    ', '  + x2 + ' ' + y2
+                );
                 path.setAttribute('fill', 'none');
-                var done = from.classList.contains('status-completed');
-                path.setAttribute('stroke', done ? 'rgba(16,185,129,0.45)' : 'rgba(58,69,96,0.9)');
-                path.setAttribute('stroke-width', '1.5');
+                path.setAttribute('stroke',
+                    from.classList.contains('status-completed')
+                        ? 'rgba(16,185,129,0.45)'
+                        : 'rgba(58,69,96,0.9)'
+                );
+                path.setAttribute('stroke-width',   '1.5');
                 path.setAttribute('stroke-linecap', 'round');
                 svg.appendChild(path);
             }
@@ -1383,10 +1396,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     drawConnectors();
 
-    // Redraw on scroll (accounts for horizontal pan)
+    // Horizontal scroll → redraw so connectors track position
     if (wrap) wrap.addEventListener('scroll', drawConnectors);
 
-    // Redraw on window resize with debounce
+    // Window resize → debounced redraw
     var resizeTimer;
     window.addEventListener('resize', function () {
         clearTimeout(resizeTimer);
