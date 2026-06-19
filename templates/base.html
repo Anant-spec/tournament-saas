@@ -128,30 +128,121 @@
             padding: 32px 20px;
         }
 
-        /* ── MESSAGES ── */
-        .messages { margin-bottom: 20px; }
-
-        .alert {
-            padding: 11px 14px;
-            border-radius: var(--radius);
-            margin-bottom: 8px;
-            font-size: 0.85rem;
-            font-weight: 500;
-            border: 1px solid transparent;
+        /* ── TOAST NOTIFICATIONS ── */
+        #toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 9999;
             display: flex;
-            align-items: center;
-            gap: 8px;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
         }
 
-        .alert::before { font-size: 1rem; }
-        .alert-success { background: var(--green-bg); color: #34d399; border-color: rgba(16,185,129,0.2); }
-        .alert-success::before { content: '✓'; }
-        .alert-error { background: var(--red-bg); color: #f87171; border-color: rgba(239,68,68,0.2); }
-        .alert-error::before { content: '✕'; }
-        .alert-warning { background: var(--amber-bg); color: var(--amber); border-color: rgba(245,158,11,0.2); }
-        .alert-warning::before { content: '⚠'; }
-        .alert-info { background: var(--blue-bg); color: #60a5fa; border-color: rgba(59,130,246,0.2); }
-        .alert-info::before { content: 'ℹ'; }
+        .toast {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            min-width: 280px;
+            max-width: 380px;
+            padding: 12px 14px;
+            border-radius: var(--radius);
+            border: 1px solid transparent;
+            font-size: 0.84rem;
+            font-weight: 500;
+            line-height: 1.4;
+            pointer-events: all;
+            cursor: default;
+            transform: translateX(120%);
+            opacity: 0;
+            transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+                        opacity 0.32s ease;
+            will-change: transform, opacity;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+        }
+
+        .toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .toast.hide {
+            transform: translateX(120%);
+            opacity: 0;
+        }
+
+        .toast-icon { font-size: 1rem; flex-shrink: 0; line-height: 1.4; }
+        .toast-body { flex: 1; }
+
+        .toast-close {
+            flex-shrink: 0;
+            background: none;
+            border: none;
+            color: inherit;
+            opacity: 0.45;
+            cursor: pointer;
+            font-size: 1rem;
+            line-height: 1;
+            padding: 0 2px;
+            margin-left: 4px;
+            transition: opacity 0.15s;
+            align-self: flex-start;
+            margin-top: 1px;
+        }
+        .toast-close:hover { opacity: 0.9; }
+
+        /* Progress bar that drains over the auto-dismiss duration */
+        .toast-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 2px;
+            border-radius: 0 0 var(--radius) var(--radius);
+            width: 100%;
+            transform-origin: left;
+            animation: toast-drain 4s linear forwards;
+        }
+        .toast { position: relative; overflow: hidden; }
+
+        @keyframes toast-drain {
+            from { transform: scaleX(1); }
+            to   { transform: scaleX(0); }
+        }
+
+        /* Colour variants */
+        .toast-success {
+            background: #0e2820;
+            color: #34d399;
+            border-color: rgba(16,185,129,0.25);
+        }
+        .toast-success .toast-progress { background: #10b981; }
+
+        .toast-error {
+            background: #250f0f;
+            color: #f87171;
+            border-color: rgba(239,68,68,0.25);
+        }
+        .toast-error .toast-progress { background: #ef4444; }
+
+        .toast-warning {
+            background: #1f1506;
+            color: var(--amber);
+            border-color: rgba(245,158,11,0.25);
+        }
+        .toast-warning .toast-progress { background: var(--amber); }
+
+        .toast-info {
+            background: #0d1729;
+            color: #60a5fa;
+            border-color: rgba(59,130,246,0.25);
+        }
+        .toast-info .toast-progress { background: #3b82f6; }
+
+        @media (max-width: 480px) {
+            #toast-container { bottom: 16px; right: 12px; left: 12px; }
+            .toast { max-width: 100%; min-width: 0; }
+        }
 
         /* ── PAGE HEADER ── */
         .page-header {
@@ -745,16 +836,62 @@
         </div>
     </nav>
 
-    <div class="container">
-        {% if messages %}
-            <div class="messages">
-                {% for message in messages %}
-                    <div class="alert alert-{{ message.level_tag }}">{{ message }}</div>
-                {% endfor %}
-            </div>
-        {% endif %}
+    <!-- Toast container — lives outside .container so it's always fixed to the viewport -->
+    <div id="toast-container" aria-live="polite" aria-atomic="false"></div>
 
+    <!-- Seed Django messages as JSON for the toast JS to consume -->
+    {% if messages %}
+    <script id="django-messages" type="application/json">
+    [{% for message in messages %}{"level":"{{ message.level_tag }}","text":{{ message|json_script:""|slice:"15:-9" }}}{% if not forloop.last %},{% endif %}{% endfor %}]
+    </script>
+    {% endif %}
+
+    <div class="container">
         {% block content %}{% endblock %}
     </div>
+
+    <script>
+    (function () {
+        const ICONS = { success: '✓', error: '✕', warning: '⚠', info: 'ℹ' };
+        const DURATION = 4000;
+
+        function showToast(level, text) {
+            const el = document.createElement('div');
+            el.className = 'toast toast-' + (level || 'info');
+            el.setAttribute('role', 'alert');
+            el.innerHTML =
+                '<span class="toast-icon">' + (ICONS[level] || 'ℹ') + '</span>' +
+                '<span class="toast-body">' + text + '</span>' +
+                '<button class="toast-close" aria-label="Dismiss">&times;</button>' +
+                '<div class="toast-progress"></div>';
+
+            document.getElementById('toast-container').appendChild(el);
+
+            // Trigger slide-in on next frame
+            requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('show')));
+
+            function dismiss() {
+                el.classList.add('hide');
+                el.addEventListener('transitionend', () => el.remove(), { once: true });
+            }
+
+            el.querySelector('.toast-close').addEventListener('click', dismiss);
+            setTimeout(dismiss, DURATION);
+        }
+
+        // Read seeded Django messages
+        var seed = document.getElementById('django-messages');
+        if (seed) {
+            try {
+                JSON.parse(seed.textContent).forEach(function (m) {
+                    showToast(m.level, m.text);
+                });
+            } catch (e) {}
+        }
+
+        // Expose globally so other scripts can trigger toasts: Toasts.show('success', 'Done!')
+        window.Toasts = { show: showToast };
+    })();
+    </script>
 </body>
 </html>
