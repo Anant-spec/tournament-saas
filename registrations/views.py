@@ -127,6 +127,49 @@ def reject_registration(request, pk):
     return redirect(f"{reverse('team_list')}?page={page}")
 
 
+@login_required
+@require_POST
+def bulk_approve_registrations(request):
+    """Approve multiple pending registrations in one action."""
+    ids = request.POST.getlist("registration_ids")
+    page = request.POST.get("page", "1")
+
+    if not ids:
+        messages.warning(request, "No registrations selected.")
+        return redirect(f"{reverse('team_list')}?page={page}")
+
+    # Fetch only registrations owned by this user, pending, no bracket yet
+    registrations = Registration.objects.select_related(
+        "tournament__organization", "team"
+    ).filter(
+        pk__in=ids,
+        status="pending",
+        tournament__organization__owner=request.user,
+    ).exclude(
+        tournament__matches__isnull=False
+    )
+
+    approved_names = []
+    skipped = 0
+    for reg in registrations:
+        # Extra check: bracket lock per tournament
+        if reg.tournament.matches.exists():
+            skipped += 1
+            continue
+        reg.status = "approved"
+        reg.approved_at = timezone.now()
+        reg.save(update_fields=["status", "approved_at"])
+        approved_names.append(reg.team.name)
+
+    if approved_names:
+        names_str = ", ".join(approved_names[:3])
+        if len(approved_names) > 3:
+            names_str += f" +{len(approved_names) - 3} more"
+        messages.success(request, f"Approved {len(approved_names)} team(s): {names_str}.")
+    if skipped:
+        messages.warning(request, f"{skipped} registration(s) skipped — bracket already generated.")
+
+    return redirect(f"{reverse('team_list')}?page={page}")
 
 
 @login_required
