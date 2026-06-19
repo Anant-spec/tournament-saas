@@ -20,7 +20,7 @@
     align-items: stretch;
     min-width: max-content;
     padding: 24px 8px;
-    position: relative;
+    position: relative; /* required for absolute SVG overlay */
 }
 
 .b-round {
@@ -180,6 +180,7 @@
     font-size: 0.6rem;
     transition: transform 0.2s ease;
     color: var(--ghost);
+    display: inline-block; /* ensure transform works */
 }
 .b-roster-toggle.open .roster-arrow { transform: rotate(180deg); }
 .b-roster-toggle .player-count-pill {
@@ -193,18 +194,15 @@
 
 /* ── ROSTER DRAWER ── */
 .b-roster-drawer {
-    display: none;
-    border-top: 1px solid var(--rim);
-    background: var(--panel);
+    max-height: 0;
     overflow: hidden;
+    border-top: 0px solid var(--rim);
+    background: var(--panel);
+    transition: max-height 0.22s ease, border-top-width 0.22s;
 }
 .b-roster-drawer.open {
-    display: block;
-    animation: drawerSlideIn 0.18s ease;
-}
-@keyframes drawerSlideIn {
-    from { opacity: 0; transform: translateY(-4px); }
-    to   { opacity: 1; transform: translateY(0); }
+    max-height: 600px; /* generous ceiling so content never clips */
+    border-top-width: 1px;
 }
 
 .b-roster-team-block { padding: 8px 10px; }
@@ -275,15 +273,20 @@
     transition: color 0.15s, background 0.15s;
 }
 .b-report-toggle:hover { color: var(--amber); background: var(--amber-bg); }
-.b-report-toggle .tog-icon { color: var(--amber); font-size: 0.9rem; line-height: 1; }
+.b-report-toggle[data-state="open"] { color: var(--pale); }
 
 .b-report-panel {
-    display: none;
-    padding: 10px;
-    border-top: 1px solid var(--rim);
+    max-height: 0;
+    overflow: hidden;
+    border-top: 0px solid var(--rim);
     background: var(--panel);
+    transition: max-height 0.22s ease, border-top-width 0.22s;
 }
-.b-report-panel.open { display: block; }
+.b-report-panel.open {
+    max-height: 300px;
+    border-top-width: 1px;
+    padding: 10px;
+}
 
 .b-radio-row {
     display: flex;
@@ -578,6 +581,7 @@
     width: 100%; height: 100%;
     pointer-events: none;
     overflow: visible;
+    z-index: 0; /* sit behind match cards */
 }
 
 /* ══════════════════════════════════════════
@@ -648,7 +652,8 @@
 }
 .stats-kpi-value.green  { color: #34d399; }
 .stats-kpi-value.amber  { color: var(--amber); }
-.stats-kpi-value.cyan   { color: var(--cyan); }
+/* Fix: was referencing --cyan which is undefined in base palette; use explicit value */
+.stats-kpi-value.cyan   { color: #22d3ee; }
 
 .stats-kpi-label {
     font-family: 'Space Mono', monospace;
@@ -687,7 +692,6 @@
     font-variant-numeric: tabular-nums;
 }
 
-/* Outer track */
 .stats-progress-track {
     height: 8px;
     background: var(--panel);
@@ -697,16 +701,13 @@
     margin-bottom: 12px;
 }
 
-/* Filled bar — width set inline via style */
 .stats-progress-fill {
     height: 100%;
     border-radius: 999px;
     background: linear-gradient(90deg, var(--green) 0%, #34d399 100%);
     transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-    min-width: {% if stats_progress > 0 %}4px{% else %}0{% endif %};
 }
 
-/* Per-round mini bars */
 .stats-round-bars {
     display: flex;
     gap: 8px;
@@ -794,7 +795,6 @@
     letter-spacing: 0.06em;
 }
 
-/* Win-rate pill */
 .stats-winrate-pill {
     flex-shrink: 0;
     font-family: 'Rajdhani', sans-serif;
@@ -809,7 +809,6 @@
 .pill-low    { background: rgba(239,68,68,0.08);  color: #f87171;    border: 1px solid rgba(239,68,68,0.18); }
 .pill-none   { background: var(--rim); color: var(--ghost); border: 1px solid transparent; font-size: 0.6rem; }
 
-/* Win-rate mini bar inside each team card */
 .stats-team-bar-track {
     flex-shrink: 0;
     width: 42px;
@@ -828,6 +827,9 @@
 {% endblock %}
 
 {% block content %}
+
+{# ── Embed tournament name safely for JS use ── #}
+{{ tournament.name|json_script:"tn-data" }}
 
 <!-- Page Header -->
 <div class="page-header">
@@ -957,15 +959,13 @@
                         {% endif %}
                     </div>
                 </div>
-                <!-- Mini win-rate bar -->
                 {% if team.played > 0 %}
                 <div class="stats-team-bar-track">
                     <div class="stats-team-bar-fill" style="width: {{ team.win_pct }}%;"></div>
                 </div>
                 {% endif %}
-                <!-- Win-rate pill -->
                 {% if team.win_pct == None %}
-                <span class="stats-winrate-pill pill-none">—</span>
+                <span class="stats-winrate-pill pill-none">&mdash;</span>
                 {% elif team.win_pct >= 60 %}
                 <span class="stats-winrate-pill pill-high">{{ team.win_pct }}%</span>
                 {% elif team.win_pct >= 40 %}
@@ -1152,7 +1152,7 @@
                         {% endif %}
 
                         {% if match.status != "completed" and match.team1 and match.team2 %}
-                        <button class="b-report-toggle" onclick="toggleReport(this)">
+                        <button class="b-report-toggle" onclick="toggleReport(this)" data-state="closed">
                             <span class="tog-icon">+</span> Report Result
                         </button>
                         <div class="b-report-panel">
@@ -1243,11 +1243,9 @@
 
 <script>
 // ── RESET MODAL ──
-const tnData = document.getElementById('tn-data');
-const TNAME = tnData ? JSON.parse(tnData.textContent) : '';
-{{ tournament.name|json_script:"tn-data" }}
-// Re-read after the script tag renders the element
-(function(){
+// json_script tag is rendered above in the template body;
+// read it here after DOM parse — always defined at this point.
+(function () {
     var el = document.getElementById('tn-data');
     window._TNAME = el ? JSON.parse(el.textContent) : '';
 })();
@@ -1257,7 +1255,7 @@ function openResetModal() {
     document.getElementById('confirmNameInput').value = '';
     document.getElementById('confirmResetBtn').disabled = true;
     document.getElementById('confirmNameHidden').value = '';
-    setTimeout(() => document.getElementById('confirmNameInput').focus(), 80);
+    setTimeout(function () { document.getElementById('confirmNameInput').focus(); }, 80);
 }
 
 function closeResetModal() {
@@ -1269,89 +1267,131 @@ function handleBackdropClick(e) {
 }
 
 function checkConfirmName(input) {
-    const match = input.value === window._TNAME;
-    input.classList.toggle('valid', match);
-    const btn = document.getElementById('confirmResetBtn');
-    const hidden = document.getElementById('confirmNameHidden');
-    btn.disabled = !match;
-    hidden.value = match ? input.value : '';
+    var matched = input.value === window._TNAME;
+    input.classList.toggle('valid', matched);
+    var btn    = document.getElementById('confirmResetBtn');
+    var hidden = document.getElementById('confirmNameHidden');
+    btn.disabled   = !matched;
+    hidden.value   = matched ? input.value : '';
 }
 
-document.addEventListener('keydown', e => {
+document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') closeResetModal();
 });
 
 // ── ROSTER TOGGLE ──
 function toggleRoster(btn) {
-    const drawer = btn.nextElementSibling;
-    const isOpen = drawer.classList.contains('open');
+    var drawer = btn.nextElementSibling;
+    var isOpen = drawer.classList.contains('open');
     drawer.classList.toggle('open', !isOpen);
     btn.classList.toggle('open', !isOpen);
     btn.setAttribute('aria-expanded', String(!isOpen));
+    // Redraw connectors after drawer animation settles
+    setTimeout(drawConnectors, 240);
 }
 
 // ── REPORT TOGGLE ──
+// Uses data-state attribute instead of innerHTML mutation
+// so embedded icons/text are never clobbered.
 function toggleReport(btn) {
-    const panel = btn.nextElementSibling;
-    const isOpen = panel.classList.contains('open');
-    document.querySelectorAll('.b-report-panel.open').forEach(p => {
+    var panel  = btn.nextElementSibling;
+    var isOpen = panel.classList.contains('open');
+
+    // Close all open report panels first
+    document.querySelectorAll('.b-report-panel.open').forEach(function (p) {
         p.classList.remove('open');
-        p.previousElementSibling.innerHTML = '<span class="tog-icon">+</span> Report Result';
+        var tog = p.previousElementSibling;
+        if (tog) {
+            tog.setAttribute('data-state', 'closed');
+            tog.querySelector('.tog-icon').textContent = '+';
+            tog.childNodes[tog.childNodes.length - 1].textContent = ' Report Result';
+        }
     });
+
     if (!isOpen) {
         panel.classList.add('open');
-        btn.innerHTML = '<span class="tog-icon">&minus;</span> Cancel';
+        btn.setAttribute('data-state', 'open');
+        btn.querySelector('.tog-icon').textContent = '\u2212'; // minus sign
+        btn.childNodes[btn.childNodes.length - 1].textContent = ' Cancel';
     }
 }
 
 // ── SVG CONNECTORS ──
-document.addEventListener('DOMContentLoaded', function() {
-    const canvas = document.getElementById('bracketCanvas');
+// Exposed at module scope so toggleRoster() can call it.
+var drawConnectors = function () {};
+
+document.addEventListener('DOMContentLoaded', function () {
+    var canvas = document.getElementById('bracketCanvas');
     if (!canvas) return;
-    const rounds = canvas.querySelectorAll('.b-round');
+
+    var rounds = canvas.querySelectorAll('.b-round');
     if (rounds.length < 2) return;
 
-    function drawConnectors() {
-        const old = canvas.querySelector('.bracket-svg-connectors');
+    var wrap = canvas.closest('.bracket-scroll-wrap');
+
+    drawConnectors = function () {
+        var old = canvas.querySelector('.bracket-svg-connectors');
         if (old) old.remove();
-        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+
+        var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         svg.classList.add('bracket-svg-connectors');
+
+        // Size SVG to the full scrollable canvas extent
+        var cW = canvas.scrollWidth;
+        var cH = canvas.scrollHeight;
+        svg.setAttribute('width',  cW);
+        svg.setAttribute('height', cH);
+        svg.style.cssText = 'position:absolute;top:0;left:0;pointer-events:none;overflow:visible;z-index:0;';
         canvas.appendChild(svg);
-        const wrap = canvas.closest('.bracket-scroll-wrap');
-        const canvasRect = canvas.getBoundingClientRect();
-        for (let r = 0; r < rounds.length - 1; r++) {
-            const curMatches  = rounds[r].querySelectorAll('.b-match');
-            const nextMatches = rounds[r + 1].querySelectorAll('.b-match');
-            for (let i = 0; i < curMatches.length; i++) {
-                const from = curMatches[i];
-                const to   = nextMatches[Math.floor(i / 2)];
+
+        var canvasRect = canvas.getBoundingClientRect();
+        // scrollLeft/Top of the wrap offsets viewport coords back to canvas-local coords
+        var sl = wrap ? wrap.scrollLeft : 0;
+        var st = wrap ? wrap.scrollTop  : 0;
+
+        for (var r = 0; r < rounds.length - 1; r++) {
+            var curMatches  = rounds[r].querySelectorAll('.b-match');
+            var nextMatches = rounds[r + 1].querySelectorAll('.b-match');
+
+            for (var i = 0; i < curMatches.length; i++) {
+                var from = curMatches[i];
+                var to   = nextMatches[Math.floor(i / 2)];
                 if (!to) continue;
-                const fR = from.getBoundingClientRect();
-                const tR = to.getBoundingClientRect();
-                const sl = wrap ? wrap.scrollLeft : 0;
-                const x1 = fR.right  - canvasRect.left + sl;
-                const y1 = fR.top    - canvasRect.top  + fR.height / 2;
-                const x2 = tR.left   - canvasRect.left + sl;
-                const y2 = tR.top    - canvasRect.top  + tR.height / 2;
-                const mx = (x1 + x2) / 2;
-                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                path.setAttribute('d', `M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`);
+
+                var fR = from.getBoundingClientRect();
+                var tR = to.getBoundingClientRect();
+
+                // Convert viewport-relative coords to canvas-local coords
+                var x1 = fR.right  - canvasRect.left + sl;
+                var y1 = fR.top    - canvasRect.top  + st + fR.height / 2;
+                var x2 = tR.left   - canvasRect.left + sl;
+                var y2 = tR.top    - canvasRect.top  + st + tR.height / 2;
+                var mx = (x1 + x2) / 2;
+
+                var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('d', 'M ' + x1 + ' ' + y1 +
+                    ' C ' + mx + ' ' + y1 + ', ' + mx + ' ' + y2 + ', ' + x2 + ' ' + y2);
                 path.setAttribute('fill', 'none');
-                const done = from.classList.contains('status-completed');
-                path.setAttribute('stroke', done ? 'rgba(16,185,129,0.4)' : 'rgba(58,69,96,0.9)');
+                var done = from.classList.contains('status-completed');
+                path.setAttribute('stroke', done ? 'rgba(16,185,129,0.45)' : 'rgba(58,69,96,0.9)');
                 path.setAttribute('stroke-width', '1.5');
+                path.setAttribute('stroke-linecap', 'round');
                 svg.appendChild(path);
             }
         }
-    }
+    };
 
     drawConnectors();
-    document.querySelectorAll('.b-roster-toggle').forEach(btn => {
-        btn.addEventListener('click', () => setTimeout(drawConnectors, 220));
-    });
-    window.addEventListener('resize', drawConnectors);
-    const wrap = canvas.closest('.bracket-scroll-wrap');
+
+    // Redraw on scroll (accounts for horizontal pan)
     if (wrap) wrap.addEventListener('scroll', drawConnectors);
+
+    // Redraw on window resize with debounce
+    var resizeTimer;
+    window.addEventListener('resize', function () {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(drawConnectors, 120);
+    });
 });
 </script>
 
