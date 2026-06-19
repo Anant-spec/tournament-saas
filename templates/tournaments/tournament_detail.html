@@ -579,6 +579,251 @@
     pointer-events: none;
     overflow: visible;
 }
+
+/* ══════════════════════════════════════════
+   STATS DASHBOARD
+══════════════════════════════════════════ */
+.stats-dashboard {
+    background: var(--plate);
+    border: 1px solid var(--rim);
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 28px;
+}
+
+.stats-dashboard-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--rim);
+    background: var(--panel);
+    gap: 12px;
+}
+
+.stats-dashboard-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--amber);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.stats-dashboard-title::before {
+    content: '';
+    width: 12px;
+    height: 1px;
+    background: var(--amber);
+}
+
+/* ── KPI ROW ── */
+.stats-kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border-bottom: 1px solid var(--rim);
+}
+
+@media (max-width: 640px) {
+    .stats-kpi-row { grid-template-columns: repeat(2, 1fr); }
+    .stats-kpi-item:nth-child(2) { border-right: none; }
+}
+
+.stats-kpi-item {
+    padding: 18px 20px;
+    border-right: 1px solid var(--rim);
+    position: relative;
+}
+.stats-kpi-item:last-child { border-right: none; }
+
+.stats-kpi-value {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--white);
+    line-height: 1;
+    margin-bottom: 5px;
+    font-variant-numeric: tabular-nums;
+}
+.stats-kpi-value.green  { color: #34d399; }
+.stats-kpi-value.amber  { color: var(--amber); }
+.stats-kpi-value.cyan   { color: var(--cyan); }
+
+.stats-kpi-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.55rem;
+    color: var(--dim);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+/* ── PROGRESS SECTION ── */
+.stats-progress-section {
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--rim);
+}
+
+.stats-progress-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.stats-progress-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.58rem;
+    color: var(--dim);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.stats-progress-pct {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--wire);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Outer track */
+.stats-progress-track {
+    height: 8px;
+    background: var(--panel);
+    border-radius: 999px;
+    overflow: hidden;
+    border: 1px solid var(--rim);
+    margin-bottom: 12px;
+}
+
+/* Filled bar — width set inline via style */
+.stats-progress-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--green) 0%, #34d399 100%);
+    transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    min-width: {% if stats_progress > 0 %}4px{% else %}0{% endif %};
+}
+
+/* Per-round mini bars */
+.stats-round-bars {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.stats-round-bar-item {
+    flex: 1;
+    min-width: 60px;
+}
+
+.stats-round-bar-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.5rem;
+    color: var(--ghost);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.stats-round-bar-label span { color: var(--dim); font-size: 0.52rem; }
+
+.stats-round-track {
+    height: 5px;
+    background: var(--panel);
+    border-radius: 999px;
+    overflow: hidden;
+    border: 1px solid var(--rim);
+}
+
+.stats-round-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: var(--amber);
+    opacity: 0.7;
+    transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ── TEAM WIN RATES ── */
+.stats-team-section {
+    padding: 18px 20px;
+}
+
+.stats-team-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 8px;
+}
+
+.stats-team-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--panel);
+    border: 1px solid var(--rim);
+    border-radius: 8px;
+    transition: border-color 0.15s;
+}
+.stats-team-row:hover { border-color: var(--ghost); }
+.stats-team-row.is-champion { border-color: rgba(245,158,11,0.4); background: rgba(245,158,11,0.04); }
+
+.stats-team-info { flex: 1; min-width: 0; }
+
+.stats-team-name {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--wire);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 3px;
+}
+.stats-team-row.is-champion .stats-team-name { color: var(--amber); }
+
+.stats-team-record {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.5rem;
+    color: var(--dim);
+    letter-spacing: 0.06em;
+}
+
+/* Win-rate pill */
+.stats-winrate-pill {
+    flex-shrink: 0;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 0.78rem;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-variant-numeric: tabular-nums;
+}
+.pill-high   { background: rgba(16,185,129,0.12); color: #34d399;   border: 1px solid rgba(16,185,129,0.25); }
+.pill-mid    { background: rgba(245,158,11,0.10); color: var(--amber); border: 1px solid rgba(245,158,11,0.2); }
+.pill-low    { background: rgba(239,68,68,0.08);  color: #f87171;    border: 1px solid rgba(239,68,68,0.18); }
+.pill-none   { background: var(--rim); color: var(--ghost); border: 1px solid transparent; font-size: 0.6rem; }
+
+/* Win-rate mini bar inside each team card */
+.stats-team-bar-track {
+    flex-shrink: 0;
+    width: 42px;
+    height: 4px;
+    background: var(--rim);
+    border-radius: 999px;
+    overflow: hidden;
+}
+.stats-team-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: var(--green);
+    transition: width 0.5s ease;
+}
 </style>
 {% endblock %}
 
@@ -608,7 +853,6 @@
             {% endif %}
         </form>
         {% else %}
-        <!-- Reset Bracket button — only when bracket exists -->
         <button type="button" class="btn btn-danger btn-sm" onclick="openResetModal()">
             &#9851; Reset Bracket
         </button>
@@ -631,6 +875,115 @@
 {% endif %}
 
 <hr>
+
+<!-- ══ STATS DASHBOARD ══ -->
+{% if stats_has_data %}
+<div class="stats-dashboard">
+
+    <div class="stats-dashboard-header">
+        <div class="stats-dashboard-title">Tournament Stats</div>
+        <span class="mono text-muted">{{ tournament.get_format_type_display }}</span>
+    </div>
+
+    <!-- KPI Row -->
+    <div class="stats-kpi-row">
+        <div class="stats-kpi-item">
+            <div class="stats-kpi-value">{{ stats_total }}</div>
+            <div class="stats-kpi-label">Total Matches</div>
+        </div>
+        <div class="stats-kpi-item">
+            <div class="stats-kpi-value green">{{ stats_done }}</div>
+            <div class="stats-kpi-label">Completed</div>
+        </div>
+        <div class="stats-kpi-item">
+            <div class="stats-kpi-value amber">{{ stats_pending }}</div>
+            <div class="stats-kpi-label">Remaining</div>
+        </div>
+        <div class="stats-kpi-item">
+            <div class="stats-kpi-value cyan">{{ stats_progress }}%</div>
+            <div class="stats-kpi-label">Progress</div>
+        </div>
+    </div>
+
+    <!-- Bracket Progress Bar -->
+    <div class="stats-progress-section">
+        <div class="stats-progress-header">
+            <span class="stats-progress-label">Bracket Progress</span>
+            <span class="stats-progress-pct">{{ stats_done }} / {{ stats_total }} matches played</span>
+        </div>
+        <div class="stats-progress-track">
+            <div class="stats-progress-fill" style="width: {{ stats_progress }}%;"></div>
+        </div>
+
+        <!-- Per-round mini bars -->
+        {% if stats_rounds %}
+        <div class="stats-round-bars">
+            {% for r in stats_rounds %}
+            <div class="stats-round-bar-item">
+                <div class="stats-round-bar-label">
+                    {% with total_rounds=stats_rounds|length %}
+                    {% if r.round == total_rounds %}&#127942; Final
+                    {% elif r.round == total_rounds|add:"-1" %}Semi
+                    {% elif r.round == total_rounds|add:"-2" %}QF
+                    {% else %}R{{ r.round }}{% endif %}
+                    {% endwith %}
+                    <span>{{ r.done }}/{{ r.total }}</span>
+                </div>
+                <div class="stats-round-track">
+                    <div class="stats-round-fill" style="width: {{ r.pct }}%;"></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Team Win Rates -->
+    {% if stats_teams %}
+    <div class="stats-team-section">
+        <div style="font-family:'Space Mono',monospace; font-size:0.58rem; color:var(--dim); letter-spacing:0.12em; text-transform:uppercase; margin-bottom:12px;">
+            Team Performance
+        </div>
+        <div class="stats-team-grid">
+            {% for team in stats_teams %}
+            <div class="stats-team-row {% if tournament.champion and tournament.champion.name == team.name %}is-champion{% endif %}">
+                <div class="stats-team-info">
+                    <div class="stats-team-name">{{ team.name }}</div>
+                    <div class="stats-team-record">
+                        {% if team.played > 0 %}
+                        {{ team.wins }}W &ndash; {{ team.losses }}L
+                        {% else %}
+                        No matches yet
+                        {% endif %}
+                    </div>
+                </div>
+                <!-- Mini win-rate bar -->
+                {% if team.played > 0 %}
+                <div class="stats-team-bar-track">
+                    <div class="stats-team-bar-fill" style="width: {{ team.win_pct }}%;"></div>
+                </div>
+                {% endif %}
+                <!-- Win-rate pill -->
+                {% if team.win_pct == None %}
+                <span class="stats-winrate-pill pill-none">—</span>
+                {% elif team.win_pct >= 60 %}
+                <span class="stats-winrate-pill pill-high">{{ team.win_pct }}%</span>
+                {% elif team.win_pct >= 40 %}
+                <span class="stats-winrate-pill pill-mid">{{ team.win_pct }}%</span>
+                {% else %}
+                <span class="stats-winrate-pill pill-low">{{ team.win_pct }}%</span>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+<hr>
+{% endif %}
+<!-- ══ END STATS DASHBOARD ══ -->
+
 
 <!-- Registered Teams -->
 <div class="section">
@@ -890,9 +1243,14 @@
 
 <script>
 // ── RESET MODAL ──
-const TOURNAMENT_NAME = {{ tournament.name|escapejs|json_script:"tn-data" }};
 const tnData = document.getElementById('tn-data');
 const TNAME = tnData ? JSON.parse(tnData.textContent) : '';
+{{ tournament.name|json_script:"tn-data" }}
+// Re-read after the script tag renders the element
+(function(){
+    var el = document.getElementById('tn-data');
+    window._TNAME = el ? JSON.parse(el.textContent) : '';
+})();
 
 function openResetModal() {
     document.getElementById('resetModal').classList.add('open');
@@ -911,7 +1269,7 @@ function handleBackdropClick(e) {
 }
 
 function checkConfirmName(input) {
-    const match = input.value === TNAME;
+    const match = input.value === window._TNAME;
     input.classList.toggle('valid', match);
     const btn = document.getElementById('confirmResetBtn');
     const hidden = document.getElementById('confirmNameHidden');

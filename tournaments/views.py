@@ -11,6 +11,7 @@ from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.db import transaction
 from django.core.paginator import Paginator
+from collections import defaultdict
 
 @login_required
 def tournament_list(request):
@@ -110,6 +111,94 @@ def tournament_delete(request, pk):
         "tournament": tournament
     })
 
+
+def _build_stats(matches, registrations):
+    """
+    Compute tournament stats from a queryset of matches.
+    Returns a dict ready to be passed to the template context.
+    """
+    all_matches = list(matches)
+
+    # Only real matches (both slots filled — exclude pure-bye placeholders)
+    real_matches = [m for m in all_matches if m.team1_id or m.team2_id]
+    # Matches where both teams are present (completable)
+    two_team_matches = [m for m in real_matches if m.team1_id and m.team2_id]
+    completed = [m for m in two_team_matches if m.status == "completed"]
+    pending   = [m for m in two_team_matches if m.status == "pending"]
+
+    total_real    = len(two_team_matches)
+    total_done    = len(completed)
+    total_pending = len(pending)
+    progress_pct  = round((total_done / total_real * 100) if total_real else 0)
+
+    # Per-round breakdown
+    round_stats = defaultdict(lambda: {"total": 0, "done": 0})
+    for m in two_team_matches:
+        round_stats[m.round_number]["total"] += 1
+        if m.status == "completed":
+            round_stats[m.round_number]["done"] += 1
+    round_stats = [
+        {
+            "round": rn,
+            "total": v["total"],
+            "done":  v["done"],
+            "pct":   round(v["done"] / v["total"] * 100) if v["total"] else 0,
+        }
+        for rn, v in sorted(round_stats.items())
+    ]
+
+    # Per-team win rates
+    wins   = defaultdict(int)
+    losses = defaultdict(int)
+    appearances = defaultdict(int)   # times the team appeared in a completed match
+    team_names  = {}                 # id -> name lookup
+
+    for m in completed:
+        if m.team1:
+            team_names[m.team1_id] = m.team1.name
+            appearances[m.team1_id] += 1
+        if m.team2:
+            team_names[m.team2_id] = m.team2.name
+            appearances[m.team2_id] += 1
+        if m.winner_id:
+            wins[m.winner_id] += 1
+            loser_id = m.team1_id if m.winner_id == m.team2_id else m.team2_id
+            if loser_id:
+                losses[loser_id] += 1
+
+    # Also seed team names from registrations so 0-match teams appear
+    for reg in registrations:
+        if reg.team_id not in team_names:
+            team_names[reg.team_id] = reg.team.name
+
+    team_stats = []
+    for tid, name in team_names.items():
+        w  = wins.get(tid, 0)
+        l  = losses.get(tid, 0)
+        played = w + l
+        rate = round(w / played * 100) if played else None
+        team_stats.append({
+            "name":    name,
+            "wins":    w,
+            "losses":  l,
+            "played":  played,
+            "win_pct": rate,
+        })
+
+    # Sort: most wins first, then alphabetical
+    team_stats.sort(key=lambda t: (-t["wins"], t["name"]))
+
+    return {
+        "stats_total":      total_real,
+        "stats_done":       total_done,
+        "stats_pending":    total_pending,
+        "stats_progress":   progress_pct,
+        "stats_rounds":     round_stats,
+        "stats_teams":      team_stats,
+        "stats_has_data":   total_real > 0,
+    }
+
+
 @login_required
 def tournament_detail(request, pk):
     tournament = get_object_or_404(
@@ -135,12 +224,15 @@ def tournament_detail(request, pk):
     for match in matches:
         grouped_matches.setdefault(match.round_number, []).append(match)
 
+    stats = _build_stats(matches, registrations)
+
     return render(request, "tournaments/tournament_detail.html", {
-        "tournament": tournament,
-        "registrations": registrations,
-        "matches": matches,
+        "tournament":      tournament,
+        "registrations":   registrations,
+        "matches":         matches,
         "grouped_matches": grouped_matches,
-        "approved_count": approved_count,
+        "approved_count":  approved_count,
+        **stats,
     })
 
 
