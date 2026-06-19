@@ -1,6 +1,341 @@
 {% extends "base.html" %}
 {% block title %}{{ tournament.name }} — Nexus{% endblock %}
 
+{% block extra_head %}
+<style>
+/* ── BRACKET CANVAS ── */
+.bracket-scroll-wrap {
+    overflow-x: auto;
+    overflow-y: visible;
+    padding-bottom: 16px;
+    -webkit-overflow-scrolling: touch;
+}
+
+.bracket-scroll-wrap::-webkit-scrollbar { height: 6px; }
+.bracket-scroll-wrap::-webkit-scrollbar-thumb { background: var(--rim); border-radius: 999px; }
+.bracket-scroll-wrap::-webkit-scrollbar-track { background: var(--panel); }
+
+.bracket-canvas {
+    display: flex;
+    gap: 0;
+    align-items: stretch;
+    min-width: max-content;
+    padding: 24px 8px;
+    position: relative;
+}
+
+/* ── ROUND COLUMN ── */
+.b-round {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    min-width: 220px;
+    width: 220px;
+    position: relative;
+}
+
+.b-round-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.58rem;
+    color: var(--amber);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    text-align: center;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(245,158,11,0.2);
+}
+
+/* ── MATCH SLOTS ── */
+.b-round-matches {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    justify-content: space-around;
+    gap: 0;
+}
+
+/* ── CONNECTOR COLUMN ── */
+.b-connector {
+    width: 40px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    position: relative;
+    align-self: stretch;
+}
+
+/* ── MATCH CARD ── */
+.b-match {
+    position: relative;
+    background: var(--plate);
+    border: 1px solid var(--rim);
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 6px 8px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    flex-shrink: 0;
+}
+
+.b-match:hover {
+    border-color: var(--ghost);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+.b-match.status-completed {
+    border-color: rgba(16,185,129,0.25);
+}
+
+.b-match.status-pending {
+    border-color: rgba(245,158,11,0.2);
+}
+
+.b-match-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 10px 6px;
+    border-bottom: 1px solid var(--rim);
+    background: var(--panel);
+}
+
+.b-match-number {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.55rem;
+    color: var(--dim);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.b-status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--ghost);
+    flex-shrink: 0;
+}
+
+.b-match.status-completed .b-status-dot { background: var(--green); }
+.b-match.status-pending   .b-status-dot { background: var(--amber); }
+
+/* ── TEAM ROW ── */
+.b-team-row {
+    display: flex;
+    align-items: center;
+    padding: 8px 10px;
+    gap: 8px;
+    border-bottom: 1px solid rgba(42,50,72,0.4);
+    min-height: 36px;
+    transition: background 0.12s;
+}
+
+.b-team-row:last-of-type { border-bottom: none; }
+
+.b-team-row.is-winner {
+    background: rgba(16,185,129,0.06);
+}
+
+.b-team-row.is-loser {
+    opacity: 0.45;
+}
+
+.b-team-seed {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.5rem;
+    color: var(--ghost);
+    width: 14px;
+    flex-shrink: 0;
+    text-align: center;
+}
+
+.b-team-name {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--wire);
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.b-team-row.is-winner .b-team-name { color: #34d399; }
+
+.b-team-name.is-tbd {
+    color: var(--ghost);
+    font-style: italic;
+    font-size: 0.74rem;
+}
+
+.b-win-icon {
+    font-size: 0.7rem;
+    flex-shrink: 0;
+    opacity: 0;
+}
+
+.b-team-row.is-winner .b-win-icon { opacity: 1; }
+
+/* ── REPORT FORM ── */
+.b-report-toggle {
+    width: 100%;
+    padding: 7px 10px;
+    background: transparent;
+    border: none;
+    border-top: 1px solid var(--rim);
+    color: var(--dim);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: color 0.15s, background 0.15s;
+}
+
+.b-report-toggle:hover { color: var(--amber); background: var(--amber-bg); }
+
+.b-report-toggle::before {
+    content: '+';
+    font-size: 0.9rem;
+    line-height: 1;
+    color: var(--amber);
+}
+
+.b-report-panel {
+    display: none;
+    padding: 10px;
+    border-top: 1px solid var(--rim);
+    background: var(--panel);
+}
+
+.b-report-panel.open { display: block; }
+
+.b-radio-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.12s;
+    margin-bottom: 4px;
+}
+
+.b-radio-row:hover { background: var(--rim); }
+
+.b-radio-row input[type="radio"] {
+    accent-color: var(--amber);
+    flex-shrink: 0;
+}
+
+.b-radio-label {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--pale);
+}
+
+.b-submit-btn {
+    width: 100%;
+    margin-top: 8px;
+    padding: 7px;
+    background: rgba(16,185,129,0.1);
+    border: 1px solid rgba(16,185,129,0.25);
+    border-radius: 6px;
+    color: #34d399;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 0.76rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.b-submit-btn:hover {
+    background: rgba(16,185,129,0.2);
+    border-color: rgba(16,185,129,0.4);
+}
+
+/* ── BYE MATCH ── */
+.b-match.is-bye {
+    opacity: 0.35;
+    border-style: dashed;
+}
+
+/* ── FINAL BADGE ── */
+.b-final-badge {
+    position: absolute;
+    top: -1px;
+    right: -1px;
+    background: var(--amber);
+    color: var(--ink);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.48rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 0 8px 0 6px;
+}
+
+/* ── CHAMPION CARD ── */
+.champion-banner {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: linear-gradient(135deg, rgba(245,158,11,0.12), rgba(245,158,11,0.04));
+    border: 1px solid rgba(245,158,11,0.3);
+    border-radius: 12px;
+    padding: 18px 24px;
+    margin-bottom: 28px;
+}
+
+.champion-trophy {
+    font-size: 2.2rem;
+    flex-shrink: 0;
+    filter: drop-shadow(0 0 12px rgba(245,158,11,0.5));
+}
+
+.champion-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.58rem;
+    color: var(--amber);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+
+.champion-name {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--white);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    line-height: 1;
+}
+
+/* ── SVG CONNECTOR LINES ── */
+.bracket-svg-connectors {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    overflow: visible;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 
 <!-- Page Header -->
@@ -17,43 +352,40 @@
         </p>
     </div>
     <div class="btn-group">
-        {# Registration toggle — blocked after bracket exists #}
         {% if not tournament.matches.exists %}
         <form method="post" action="{% url 'toggle_registration' tournament.id %}" style="margin:0;">
             {% csrf_token %}
             {% if tournament.registration_open %}
-            <button type="submit" class="btn btn-danger btn-sm">🔒 Close Registration</button>
+            <button type="submit" class="btn btn-danger btn-sm">&#128274; Close Registration</button>
             {% else %}
-            <button type="submit" class="btn btn-success btn-sm">🔓 Open Registration</button>
+            <button type="submit" class="btn btn-success btn-sm">&#128275; Open Registration</button>
             {% endif %}
         </form>
         {% else %}
         <span class="btn btn-ghost btn-sm" style="cursor:default; opacity:0.5;">
-            {% if tournament.registration_open %}🔓 Open{% else %}🔒 Closed{% endif %}
+            {% if tournament.registration_open %}&#128275; Open{% else %}&#128274; Closed{% endif %}
         </span>
         {% endif %}
         <a href="{% url 'tournament_edit' tournament.id %}" class="btn btn-secondary">Edit</a>
         <a href="{% url 'tournament_delete' tournament.id %}" class="btn btn-danger">Delete</a>
-        <a href="{% url 'tournament_list' %}" class="btn btn-ghost">← Back</a>
+        <a href="{% url 'tournament_list' %}" class="btn btn-ghost">&#8592; Back</a>
     </div>
 </div>
 
 <!-- Champion Banner -->
 {% if tournament.champion %}
-<div class="card card-accent" style="margin-bottom:28px; display:flex; align-items:center; gap:14px;">
-    <div style="font-size:1.8rem;">🏆</div>
+<div class="champion-banner">
+    <div class="champion-trophy">&#127942;</div>
     <div>
-        <div class="mono text-amber" style="margin-bottom:2px;">Tournament Champion</div>
-        <div style="font-family:'Rajdhani',sans-serif; font-size:1.3rem; font-weight:700; color:var(--white); text-transform:uppercase;">
-            {{ tournament.champion.name }}
-        </div>
+        <div class="champion-label">Tournament Champion</div>
+        <div class="champion-name">{{ tournament.champion.name }}</div>
     </div>
 </div>
 {% endif %}
 
 <hr>
 
-<!-- Registered Teams Section -->
+<!-- Registered Teams -->
 <div class="section">
     <div class="section-header">
         <h2>Registered Teams</h2>
@@ -61,37 +393,37 @@
     </div>
 
     {% if registrations %}
-        <div class="table-wrap">
-            <table>
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Team</th>
-                        <th>Captain</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for registration in registrations %}
-                        <tr>
-                            <td class="mono text-muted">{{ forloop.counter }}</td>
-                            <td style="font-family:'Rajdhani',sans-serif; font-weight:600; color:var(--wire); text-transform:uppercase; letter-spacing:0.03em;">
-                                {{ registration.team.name }}
-                            </td>
-                            <td class="text-muted">{{ registration.team.captain_name }}</td>
-                            <td><span class="badge badge-{{ registration.status }}">{{ registration.status }}</span></td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Team</th>
+                    <th>Captain</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for registration in registrations %}
+                <tr>
+                    <td class="mono text-muted">{{ forloop.counter }}</td>
+                    <td style="font-family:'Rajdhani',sans-serif; font-weight:600; color:var(--wire); text-transform:uppercase; letter-spacing:0.03em;">
+                        {{ registration.team.name }}
+                    </td>
+                    <td class="text-muted">{{ registration.team.captain_name }}</td>
+                    <td><span class="badge badge-{{ registration.status }}">{{ registration.status }}</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
     {% else %}
-        <div class="empty-state">
-            <div class="empty-state-icon">◈</div>
-            <h3>No registrations yet</h3>
-            <p>Teams will appear here once they register for this tournament.</p>
-            <a href="{% url 'team_create' %}" class="btn btn-secondary">Register a Team</a>
-        </div>
+    <div class="empty-state">
+        <div class="empty-state-icon">&#9672;</div>
+        <h3>No registrations yet</h3>
+        <p>Teams will appear here once they register for this tournament.</p>
+        <a href="{% url 'team_create' %}" class="btn btn-secondary">Register a Team</a>
+    </div>
     {% endif %}
 </div>
 
@@ -102,84 +434,193 @@
     <div class="section-header">
         <h2>Bracket</h2>
         {% if matches %}
-            <span class="mono text-muted">{{ matches|length }} match{% if matches|length != 1 %}es{% endif %}</span>
+        <span class="mono text-muted">{{ grouped_matches|length }} round{% if grouped_matches|length != 1 %}s{% endif %} &middot; {{ matches|length }} match{% if matches|length != 1 %}es{% endif %}</span>
         {% endif %}
     </div>
 
     {% if matches %}
-        <div class="bracket-board">
+    <div class="bracket-scroll-wrap">
+        <div class="bracket-canvas" id="bracketCanvas">
+
             {% for round_number, round_matches in grouped_matches.items %}
-                <div class="bracket-round">
-                    <div class="round-header">Round {{ round_number }}</div>
+            {% with total=grouped_matches|length %}
+            <div class="b-round" data-round="{{ round_number }}">
 
-                    <div class="bracket-round-stack">
-                        {% for match in round_matches %}
-                            <div class="match-card {{ match.status }}">
-                                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
-                                    <span class="mono text-muted">Match {{ match.match_number }}</span>
-                                    <span class="badge {% if match.status == 'completed' %}badge-completed{% else %}badge-ongoing{% endif %}">
-                                        {{ match.status }}
-                                    </span>
-                                </div>
-
-                                <div class="bracket-team {% if match.winner_id == match.team1_id %}winner{% endif %}">
-                                    <span>{{ match.team1.name|default:"TBD" }}</span>
-                                </div>
-
-                                <div class="bracket-team {% if match.winner_id == match.team2_id %}winner{% endif %}">
-                                    <span>{{ match.team2.name|default:"TBD" }}</span>
-                                </div>
-
-                                {% if match.winner %}
-                                    <div style="margin-top:10px; display:flex; align-items:center; gap:6px;">
-                                        <span style="font-size:0.9rem;">🏆</span>
-                                        <span style="font-family:'Rajdhani',sans-serif; font-weight:600; font-size:0.85rem; color:#34d399; text-transform:uppercase; letter-spacing:0.04em;">
-                                            {{ match.winner.name }}
-                                        </span>
-                                    </div>
-                                {% endif %}
-
-                                {% if match.status != "completed" and match.team1 and match.team2 %}
-                                    <form method="post" action="{% url 'report_match_result' match.id %}" style="margin-top:14px; padding-top:12px; border-top:1px solid var(--rim);">
-                                        {% csrf_token %}
-                                        <div class="mono text-muted" style="margin-bottom:8px; font-size:0.6rem; letter-spacing:0.12em;">SELECT WINNER</div>
-                                        <div class="btn-group" style="margin-bottom:10px;">
-                                            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:var(--pale); font-size:0.85rem;">
-                                                <input type="radio" name="winner" value="{{ match.team1.id }}" required style="accent-color:var(--amber);">
-                                                <span style="font-family:'Rajdhani',sans-serif; font-weight:600; text-transform:uppercase; letter-spacing:0.04em;">{{ match.team1.name }}</span>
-                                            </label>
-                                            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; color:var(--pale); font-size:0.85rem;">
-                                                <input type="radio" name="winner" value="{{ match.team2.id }}" style="accent-color:var(--amber);">
-                                                <span style="font-family:'Rajdhani',sans-serif; font-weight:600; text-transform:uppercase; letter-spacing:0.04em;">{{ match.team2.name }}</span>
-                                            </label>
-                                        </div>
-                                        <button type="submit" class="btn btn-success btn-sm">Submit Result</button>
-                                    </form>
-                                {% elif match.status == "completed" %}
-                                    <p class="text-muted text-sm" style="margin-top:8px;">Result locked.</p>
-                                {% endif %}
-                            </div>
-                        {% endfor %}
-                    </div>
+                <div class="b-round-label">
+                    {% if round_number == total %}
+                        &#127942; Final
+                    {% elif round_number == total|add:"-1" %}
+                        Semi&#8209;Final
+                    {% elif round_number == total|add:"-2" %}
+                        Quarter&#8209;Final
+                    {% else %}
+                        Round {{ round_number }}
+                    {% endif %}
                 </div>
-            {% endfor %}
-        </div>
-    {% else %}
-        <div class="empty-state">
-            <div class="empty-state-icon">◬</div>
-            <h3>No bracket yet</h3>
-            <p>Approve at least 2 teams, then generate the bracket to start the tournament.</p>
 
-            {% if tournament.format_type == "single_elimination" %}
-                <form method="post" action="{% url 'generate_bracket' tournament.id %}">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-primary">Generate Bracket</button>
-                </form>
-            {% else %}
-                <p class="text-muted text-sm mt-1">Bracket generation is only available for single elimination format.</p>
+                <div class="b-round-matches">
+                    {% for match in round_matches %}
+                    <div class="b-match status-{{ match.status }}{% if not match.team1 and not match.team2 %} is-bye{% endif %}"
+                         id="match-{{ match.id }}"
+                         data-match="{{ match.id }}">
+
+                        {% if round_number == total %}
+                        <div class="b-final-badge">Final</div>
+                        {% endif %}
+
+                        <div class="b-match-header">
+                            <span class="b-match-number">M{{ match.match_number }}</span>
+                            <div class="b-status-dot"></div>
+                        </div>
+
+                        <!-- Team 1 -->
+                        <div class="b-team-row
+                            {% if match.winner_id and match.winner_id == match.team1_id %}is-winner
+                            {% elif match.winner_id and match.winner_id != match.team1_id %}is-loser{% endif %}">
+                            <span class="b-team-seed">1</span>
+                            {% if match.team1 %}
+                            <span class="b-team-name">{{ match.team1.name }}</span>
+                            {% else %}
+                            <span class="b-team-name is-tbd">TBD</span>
+                            {% endif %}
+                            <span class="b-win-icon">&#10003;</span>
+                        </div>
+
+                        <!-- Team 2 -->
+                        <div class="b-team-row
+                            {% if match.winner_id and match.winner_id == match.team2_id %}is-winner
+                            {% elif match.winner_id and match.winner_id != match.team2_id %}is-loser{% endif %}">
+                            <span class="b-team-seed">2</span>
+                            {% if match.team2 %}
+                            <span class="b-team-name">{{ match.team2.name }}</span>
+                            {% else %}
+                            <span class="b-team-name is-tbd">TBD</span>
+                            {% endif %}
+                            <span class="b-win-icon">&#10003;</span>
+                        </div>
+
+                        <!-- Report form -->
+                        {% if match.status != "completed" and match.team1 and match.team2 %}
+                        <button class="b-report-toggle" onclick="toggleReport(this)">Report Result</button>
+                        <div class="b-report-panel">
+                            <form method="post" action="{% url 'report_match_result' match.id %}">
+                                {% csrf_token %}
+                                <label class="b-radio-row">
+                                    <input type="radio" name="winner" value="{{ match.team1.id }}" required>
+                                    <span class="b-radio-label">{{ match.team1.name }}</span>
+                                </label>
+                                <label class="b-radio-row">
+                                    <input type="radio" name="winner" value="{{ match.team2.id }}">
+                                    <span class="b-radio-label">{{ match.team2.name }}</span>
+                                </label>
+                                <button type="submit" class="b-submit-btn">&#10003; Confirm Winner</button>
+                            </form>
+                        </div>
+                        {% elif match.status == "completed" and match.winner %}
+                        <div style="padding:6px 10px; border-top:1px solid var(--rim); display:flex; align-items:center; gap:6px;">
+                            <span style="font-size:0.65rem;">&#127942;</span>
+                            <span style="font-family:'Rajdhani',sans-serif; font-size:0.75rem; font-weight:700; color:#34d399; text-transform:uppercase; letter-spacing:0.06em;">{{ match.winner.name }} advances</span>
+                        </div>
+                        {% endif %}
+
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            {% if not forloop.last %}
+            <div class="b-connector" data-after-round="{{ round_number }}"></div>
             {% endif %}
+
+            {% endwith %}
+            {% endfor %}
+
         </div>
+    </div>
+
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">&#9651;</div>
+        <h3>No bracket yet</h3>
+        <p>Approve at least 2 teams, then generate the bracket to start the tournament.</p>
+        {% if tournament.format_type == "single_elimination" %}
+        <form method="post" action="{% url 'generate_bracket' tournament.id %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary">Generate Bracket</button>
+        </form>
+        {% else %}
+        <p class="text-muted text-sm mt-1">Bracket generation is only available for single elimination format.</p>
+        {% endif %}
+    </div>
     {% endif %}
 </div>
+
+<script>
+function toggleReport(btn) {
+    const panel = btn.nextElementSibling;
+    const isOpen = panel.classList.contains('open');
+    document.querySelectorAll('.b-report-panel.open').forEach(p => {
+        p.classList.remove('open');
+        p.previousElementSibling.textContent = 'Report Result';
+    });
+    if (!isOpen) {
+        panel.classList.add('open');
+        btn.textContent = '\u2212 Cancel';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const canvas = document.getElementById('bracketCanvas');
+    if (!canvas) return;
+
+    const rounds = canvas.querySelectorAll('.b-round');
+    if (rounds.length < 2) return;
+
+    function drawConnectors() {
+        const existing = canvas.querySelector('.bracket-svg-connectors');
+        if (existing) existing.remove();
+
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.classList.add('bracket-svg-connectors');
+        canvas.appendChild(svg);
+
+        const canvasRect = canvas.getBoundingClientRect();
+
+        for (let r = 0; r < rounds.length - 1; r++) {
+            const currentMatches = rounds[r].querySelectorAll('.b-match');
+            const nextMatches = rounds[r + 1].querySelectorAll('.b-match');
+
+            for (let i = 0; i < currentMatches.length; i++) {
+                const fromMatch = currentMatches[i];
+                const toMatch = nextMatches[Math.floor(i / 2)];
+                if (!toMatch) continue;
+
+                const fromRect = fromMatch.getBoundingClientRect();
+                const toRect = toMatch.getBoundingClientRect();
+
+                const scrollLeft = canvas.closest('.bracket-scroll-wrap').scrollLeft;
+
+                const x1 = fromRect.right - canvasRect.left + scrollLeft;
+                const y1 = fromRect.top - canvasRect.top + fromRect.height / 2;
+                const x2 = toRect.left - canvasRect.left + scrollLeft;
+                const y2 = toRect.top - canvasRect.top + toRect.height / 2;
+                const mx = (x1 + x2) / 2;
+
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('d', `M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`);
+                path.setAttribute('fill', 'none');
+                const done = fromMatch.classList.contains('status-completed');
+                path.setAttribute('stroke', done ? 'rgba(16,185,129,0.4)' : 'rgba(58,69,96,0.9)');
+                path.setAttribute('stroke-width', '1.5');
+                svg.appendChild(path);
+            }
+        }
+    }
+
+    drawConnectors();
+    window.addEventListener('resize', drawConnectors);
+    canvas.closest('.bracket-scroll-wrap').addEventListener('scroll', drawConnectors);
+});
+</script>
 
 {% endblock %}
