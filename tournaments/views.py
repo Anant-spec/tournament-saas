@@ -37,7 +37,6 @@ def tournament_create(request):
     if form.is_valid():
         tournament = form.save(commit=False)
 
-        # ✅ PLAN GATE — add this block here
         org = tournament.organization
         try:
             sub = org.subscription
@@ -46,10 +45,8 @@ def tournament_create(request):
                 messages.error(request, f"Your {sub.plan.get_name_display()} plan allows only {sub.plan.tournament_limit} tournaments. Upgrade to create more.")
                 return render(request, "tournaments/tournament_form.html", {"form": form})
         except Exception:
-            # No subscription found — block creation
             messages.error(request, "No active plan found for your organization. Please set up a plan.")
             return render(request, "tournaments/tournament_form.html", {"form": form})
-        # ✅ END PLAN GATE
 
         from django.utils.text import slugify
         base_slug = slugify(tournament.name)
@@ -116,13 +113,15 @@ def tournament_delete(request, pk):
 @login_required
 def tournament_detail(request, pk):
     tournament = get_object_or_404(
-        Tournament.objects.select_related("organization","champion"),
+        Tournament.objects.select_related("organization", "champion"),
         pk=pk,
         organization__owner=request.user
     )
 
     matches = tournament.matches.all().order_by("round_number", "match_number")
     registrations = tournament.registrations.select_related("team").all()
+
+    approved_count = registrations.filter(status="approved").count()
 
     grouped_matches = {}
     for match in matches:
@@ -133,6 +132,7 @@ def tournament_detail(request, pk):
         "registrations": registrations,
         "matches": matches,
         "grouped_matches": grouped_matches,
+        "approved_count": approved_count,
     })
 
 
@@ -200,7 +200,6 @@ def generate_bracket(request, pk):
             matches_to_update.append(match)
     Match.objects.bulk_update(matches_to_update, ["next_match"])
 
-    # --- FIXED: distribute byes evenly across bracket ---
     slots = [None] * bracket_size
     positions = list(range(bracket_size))
     random.shuffle(positions)
@@ -217,7 +216,6 @@ def generate_bracket(request, pk):
         first_round_to_update.append(match)
     Match.objects.bulk_update(first_round_to_update, ["team1", "team2", "status"])
 
-    # auto-advance teams with a bye
     bye_advances = []
     for match in first_round_to_update:
         if match.team1 is not None and match.team2 is None:
@@ -339,7 +337,6 @@ def toggle_registration(request, pk):
         organization__owner=request.user
     )
 
-    # Block toggle after bracket is generated
     if tournament.matches.exists():
         messages.error(request, "Cannot change registration status after bracket has been generated.")
         return redirect("tournament_detail", pk=tournament.pk)

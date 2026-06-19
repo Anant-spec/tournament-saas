@@ -43,7 +43,6 @@ class Tournament(models.Model):
         return self.name
 
 
-
 class Match(models.Model):
     STATUS_CHOICES = (
         ("pending", "Pending"),
@@ -83,6 +82,7 @@ class Match(models.Model):
         related_name="previous_matches"
     )
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
+    scheduled_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

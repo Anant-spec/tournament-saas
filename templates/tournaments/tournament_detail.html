@@ -10,7 +10,6 @@
     padding-bottom: 16px;
     -webkit-overflow-scrolling: touch;
 }
-
 .bracket-scroll-wrap::-webkit-scrollbar { height: 6px; }
 .bracket-scroll-wrap::-webkit-scrollbar-thumb { background: var(--rim); border-radius: 999px; }
 .bracket-scroll-wrap::-webkit-scrollbar-track { background: var(--panel); }
@@ -24,7 +23,6 @@
     position: relative;
 }
 
-/* ── ROUND COLUMN ── */
 .b-round {
     display: flex;
     flex-direction: column;
@@ -46,23 +44,16 @@
     border-bottom: 1px solid rgba(245,158,11,0.2);
 }
 
-/* ── MATCH SLOTS ── */
 .b-round-matches {
     display: flex;
     flex-direction: column;
     flex: 1;
     justify-content: space-around;
-    gap: 0;
 }
 
-/* ── CONNECTOR COLUMN ── */
 .b-connector {
     width: 40px;
     flex-shrink: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-around;
-    position: relative;
     align-self: stretch;
 }
 
@@ -77,35 +68,40 @@
     transition: border-color 0.15s, box-shadow 0.15s;
     flex-shrink: 0;
 }
-
-.b-match:hover {
-    border-color: var(--ghost);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-}
-
-.b-match.status-completed {
-    border-color: rgba(16,185,129,0.25);
-}
-
-.b-match.status-pending {
-    border-color: rgba(245,158,11,0.2);
-}
+.b-match:hover { border-color: var(--ghost); box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+.b-match.status-completed { border-color: rgba(16,185,129,0.25); }
+.b-match.status-pending   { border-color: rgba(245,158,11,0.18); }
 
 .b-match-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 7px 10px 6px;
+    padding: 6px 10px 5px;
     border-bottom: 1px solid var(--rim);
     background: var(--panel);
+    gap: 6px;
 }
 
 .b-match-number {
     font-family: 'Space Mono', monospace;
-    font-size: 0.55rem;
+    font-size: 0.52rem;
     color: var(--dim);
-    letter-spacing: 0.12em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
+    flex-shrink: 0;
+}
+
+/* scheduled time in header */
+.b-match-time {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.5rem;
+    color: var(--dim);
+    letter-spacing: 0.05em;
+    flex: 1;
+    text-align: right;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .b-status-dot {
@@ -115,7 +111,6 @@
     background: var(--ghost);
     flex-shrink: 0;
 }
-
 .b-match.status-completed .b-status-dot { background: var(--green); }
 .b-match.status-pending   .b-status-dot { background: var(--amber); }
 
@@ -129,16 +124,9 @@
     min-height: 36px;
     transition: background 0.12s;
 }
-
 .b-team-row:last-of-type { border-bottom: none; }
-
-.b-team-row.is-winner {
-    background: rgba(16,185,129,0.06);
-}
-
-.b-team-row.is-loser {
-    opacity: 0.45;
-}
+.b-team-row.is-winner { background: rgba(16,185,129,0.06); }
+.b-team-row.is-loser  { opacity: 0.42; }
 
 .b-team-seed {
     font-family: 'Space Mono', monospace;
@@ -162,21 +150,10 @@
     text-overflow: ellipsis;
     white-space: nowrap;
 }
-
 .b-team-row.is-winner .b-team-name { color: #34d399; }
+.b-team-name.is-tbd { color: var(--ghost); font-style: italic; font-size: 0.74rem; }
 
-.b-team-name.is-tbd {
-    color: var(--ghost);
-    font-style: italic;
-    font-size: 0.74rem;
-}
-
-.b-win-icon {
-    font-size: 0.7rem;
-    flex-shrink: 0;
-    opacity: 0;
-}
-
+.b-win-icon { font-size: 0.7rem; flex-shrink: 0; opacity: 0; }
 .b-team-row.is-winner .b-win-icon { opacity: 1; }
 
 /* ── REPORT FORM ── */
@@ -188,7 +165,7 @@
     border-top: 1px solid var(--rim);
     color: var(--dim);
     font-family: 'Space Mono', monospace;
-    font-size: 0.58rem;
+    font-size: 0.55rem;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     cursor: pointer;
@@ -198,15 +175,8 @@
     gap: 6px;
     transition: color 0.15s, background 0.15s;
 }
-
 .b-report-toggle:hover { color: var(--amber); background: var(--amber-bg); }
-
-.b-report-toggle::before {
-    content: '+';
-    font-size: 0.9rem;
-    line-height: 1;
-    color: var(--amber);
-}
+.b-report-toggle .tog-icon { color: var(--amber); font-size: 0.9rem; line-height: 1; }
 
 .b-report-panel {
     display: none;
@@ -214,7 +184,6 @@
     border-top: 1px solid var(--rim);
     background: var(--panel);
 }
-
 .b-report-panel.open { display: block; }
 
 .b-radio-row {
@@ -227,14 +196,8 @@
     transition: background 0.12s;
     margin-bottom: 4px;
 }
-
 .b-radio-row:hover { background: var(--rim); }
-
-.b-radio-row input[type="radio"] {
-    accent-color: var(--amber);
-    flex-shrink: 0;
-}
-
+.b-radio-row input[type="radio"] { accent-color: var(--amber); flex-shrink: 0; }
 .b-radio-label {
     font-family: 'Rajdhani', sans-serif;
     font-weight: 600;
@@ -260,27 +223,17 @@
     cursor: pointer;
     transition: background 0.15s, border-color 0.15s;
 }
+.b-submit-btn:hover { background: rgba(16,185,129,0.2); border-color: rgba(16,185,129,0.4); }
 
-.b-submit-btn:hover {
-    background: rgba(16,185,129,0.2);
-    border-color: rgba(16,185,129,0.4);
-}
+.b-match.is-bye { opacity: 0.32; border-style: dashed; }
 
-/* ── BYE MATCH ── */
-.b-match.is-bye {
-    opacity: 0.35;
-    border-style: dashed;
-}
-
-/* ── FINAL BADGE ── */
 .b-final-badge {
     position: absolute;
-    top: -1px;
-    right: -1px;
+    top: -1px; right: -1px;
     background: var(--amber);
     color: var(--ink);
     font-family: 'Space Mono', monospace;
-    font-size: 0.48rem;
+    font-size: 0.46rem;
     font-weight: 700;
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -288,7 +241,7 @@
     border-radius: 0 8px 0 6px;
 }
 
-/* ── CHAMPION CARD ── */
+/* ── CHAMPION BANNER ── */
 .champion-banner {
     display: flex;
     align-items: center;
@@ -299,33 +252,65 @@
     padding: 18px 24px;
     margin-bottom: 28px;
 }
+.champion-trophy { font-size: 2.2rem; flex-shrink: 0; filter: drop-shadow(0 0 12px rgba(245,158,11,0.5)); }
+.champion-label { font-family: 'Space Mono', monospace; font-size: 0.58rem; color: var(--amber); letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 4px; }
+.champion-name { font-family: 'Rajdhani', sans-serif; font-size: 1.6rem; font-weight: 700; color: var(--white); text-transform: uppercase; letter-spacing: 0.06em; line-height: 1; }
 
-.champion-trophy {
-    font-size: 2.2rem;
-    flex-shrink: 0;
-    filter: drop-shadow(0 0 12px rgba(245,158,11,0.5));
-}
-
-.champion-label {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.58rem;
-    color: var(--amber);
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
+/* ── GENERATE BRACKET CTA ── */
+.gen-bracket-cta {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background: var(--panel);
+    border: 1px solid var(--rim);
+    border-radius: 10px;
+    padding: 18px 22px;
     margin-bottom: 4px;
 }
-
-.champion-name {
+.gen-bracket-cta.ready {
+    border-color: rgba(245,158,11,0.3);
+    background: linear-gradient(135deg, rgba(245,158,11,0.06), transparent);
+}
+.gen-bracket-icon { font-size: 1.6rem; flex-shrink: 0; }
+.gen-bracket-text { flex: 1; }
+.gen-bracket-text strong {
+    display: block;
     font-family: 'Rajdhani', sans-serif;
-    font-size: 1.6rem;
     font-weight: 700;
-    color: var(--white);
+    font-size: 0.95rem;
+    color: var(--wire);
     text-transform: uppercase;
-    letter-spacing: 0.06em;
-    line-height: 1;
+    letter-spacing: 0.05em;
+    margin-bottom: 3px;
+}
+.gen-bracket-text span {
+    font-size: 0.78rem;
+    color: var(--dim);
+}
+.gen-bracket-btn {
+    padding: 9px 20px;
+    background: var(--amber);
+    color: var(--ink);
+    border: none;
+    border-radius: 6px;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s;
+    flex-shrink: 0;
+}
+.gen-bracket-btn:hover { background: var(--amber-hot); }
+.gen-bracket-btn:disabled {
+    background: var(--ghost);
+    color: var(--dim);
+    cursor: not-allowed;
 }
 
-/* ── SVG CONNECTOR LINES ── */
+/* ── SVG CONNECTORS ── */
 .bracket-svg-connectors {
     position: absolute;
     top: 0; left: 0;
@@ -422,7 +407,6 @@
         <div class="empty-state-icon">&#9672;</div>
         <h3>No registrations yet</h3>
         <p>Teams will appear here once they register for this tournament.</p>
-        <a href="{% url 'team_create' %}" class="btn btn-secondary">Register a Team</a>
     </div>
     {% endif %}
 </div>
@@ -438,7 +422,40 @@
         {% endif %}
     </div>
 
-    {% if matches %}
+    {% if not matches %}
+    <!-- Generate Bracket CTA -->
+    {% if tournament.format_type == "single_elimination" %}
+    <div class="gen-bracket-cta {% if approved_count >= 2 %}ready{% endif %}">
+        <div class="gen-bracket-icon">
+            {% if approved_count >= 2 %}&#9651;{% else %}&#9650;{% endif %}
+        </div>
+        <div class="gen-bracket-text">
+            <strong>Generate Bracket</strong>
+            {% if approved_count >= 2 %}
+            <span>{{ approved_count }} approved team{% if approved_count != 1 %}s{% endif %} ready &mdash; bracket can be generated now.</span>
+            {% elif approved_count == 1 %}
+            <span>1 approved team so far &mdash; need at least 1 more to generate the bracket.</span>
+            {% else %}
+            <span>No approved teams yet &mdash; approve at least 2 teams from Registrations to proceed.</span>
+            {% endif %}
+        </div>
+        <form method="post" action="{% url 'generate_bracket' tournament.id %}" style="margin:0;">
+            {% csrf_token %}
+            <button type="submit" class="gen-bracket-btn" {% if approved_count < 2 %}disabled{% endif %}>
+                &#9651; Generate
+            </button>
+        </form>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">&#9651;</div>
+        <h3>Round Robin bracket coming soon</h3>
+        <p>Automated bracket generation is currently available for Single Elimination format only.</p>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <!-- Bracket Canvas -->
     <div class="bracket-scroll-wrap">
         <div class="bracket-canvas" id="bracketCanvas">
 
@@ -470,6 +487,9 @@
 
                         <div class="b-match-header">
                             <span class="b-match-number">M{{ match.match_number }}</span>
+                            {% if match.scheduled_at %}
+                            <span class="b-match-time">{{ match.scheduled_at|date:"d M, H:i" }}</span>
+                            {% endif %}
                             <div class="b-status-dot"></div>
                         </div>
 
@@ -501,7 +521,9 @@
 
                         <!-- Report form -->
                         {% if match.status != "completed" and match.team1 and match.team2 %}
-                        <button class="b-report-toggle" onclick="toggleReport(this)">Report Result</button>
+                        <button class="b-report-toggle" onclick="toggleReport(this)">
+                            <span class="tog-icon">+</span> Report Result
+                        </button>
                         <div class="b-report-panel">
                             <form method="post" action="{% url 'report_match_result' match.id %}">
                                 {% csrf_token %}
@@ -537,22 +559,8 @@
 
         </div>
     </div>
-
-    {% else %}
-    <div class="empty-state">
-        <div class="empty-state-icon">&#9651;</div>
-        <h3>No bracket yet</h3>
-        <p>Approve at least 2 teams, then generate the bracket to start the tournament.</p>
-        {% if tournament.format_type == "single_elimination" %}
-        <form method="post" action="{% url 'generate_bracket' tournament.id %}">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-primary">Generate Bracket</button>
-        </form>
-        {% else %}
-        <p class="text-muted text-sm mt-1">Bracket generation is only available for single elimination format.</p>
-        {% endif %}
-    </div>
     {% endif %}
+
 </div>
 
 <script>
@@ -561,55 +569,55 @@ function toggleReport(btn) {
     const isOpen = panel.classList.contains('open');
     document.querySelectorAll('.b-report-panel.open').forEach(p => {
         p.classList.remove('open');
-        p.previousElementSibling.textContent = 'Report Result';
+        const tb = p.previousElementSibling;
+        tb.innerHTML = '<span class="tog-icon">+</span> Report Result';
     });
     if (!isOpen) {
         panel.classList.add('open');
-        btn.textContent = '\u2212 Cancel';
+        btn.innerHTML = '<span class="tog-icon">&minus;</span> Cancel';
     }
 }
 
 document.addEventListener('DOMContentLoaded', function() {
     const canvas = document.getElementById('bracketCanvas');
     if (!canvas) return;
-
     const rounds = canvas.querySelectorAll('.b-round');
     if (rounds.length < 2) return;
 
     function drawConnectors() {
-        const existing = canvas.querySelector('.bracket-svg-connectors');
-        if (existing) existing.remove();
+        const old = canvas.querySelector('.bracket-svg-connectors');
+        if (old) old.remove();
 
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         svg.classList.add('bracket-svg-connectors');
         canvas.appendChild(svg);
 
+        const wrap = canvas.closest('.bracket-scroll-wrap');
         const canvasRect = canvas.getBoundingClientRect();
 
         for (let r = 0; r < rounds.length - 1; r++) {
-            const currentMatches = rounds[r].querySelectorAll('.b-match');
+            const curMatches  = rounds[r].querySelectorAll('.b-match');
             const nextMatches = rounds[r + 1].querySelectorAll('.b-match');
 
-            for (let i = 0; i < currentMatches.length; i++) {
-                const fromMatch = currentMatches[i];
-                const toMatch = nextMatches[Math.floor(i / 2)];
-                if (!toMatch) continue;
+            for (let i = 0; i < curMatches.length; i++) {
+                const from = curMatches[i];
+                const to   = nextMatches[Math.floor(i / 2)];
+                if (!to) continue;
 
-                const fromRect = fromMatch.getBoundingClientRect();
-                const toRect = toMatch.getBoundingClientRect();
+                const fR = from.getBoundingClientRect();
+                const tR = to.getBoundingClientRect();
+                const sl = wrap ? wrap.scrollLeft : 0;
 
-                const scrollLeft = canvas.closest('.bracket-scroll-wrap').scrollLeft;
-
-                const x1 = fromRect.right - canvasRect.left + scrollLeft;
-                const y1 = fromRect.top - canvasRect.top + fromRect.height / 2;
-                const x2 = toRect.left - canvasRect.left + scrollLeft;
-                const y2 = toRect.top - canvasRect.top + toRect.height / 2;
+                const x1 = fR.right  - canvasRect.left + sl;
+                const y1 = fR.top    - canvasRect.top  + fR.height / 2;
+                const x2 = tR.left   - canvasRect.left + sl;
+                const y2 = tR.top    - canvasRect.top  + tR.height / 2;
                 const mx = (x1 + x2) / 2;
 
                 const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
                 path.setAttribute('d', `M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`);
                 path.setAttribute('fill', 'none');
-                const done = fromMatch.classList.contains('status-completed');
+                const done = from.classList.contains('status-completed');
                 path.setAttribute('stroke', done ? 'rgba(16,185,129,0.4)' : 'rgba(58,69,96,0.9)');
                 path.setAttribute('stroke-width', '1.5');
                 svg.appendChild(path);
@@ -619,7 +627,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     drawConnectors();
     window.addEventListener('resize', drawConnectors);
-    canvas.closest('.bracket-scroll-wrap').addEventListener('scroll', drawConnectors);
+    const wrap = canvas.closest('.bracket-scroll-wrap');
+    if (wrap) wrap.addEventListener('scroll', drawConnectors);
 });
 </script>
 
