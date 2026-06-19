@@ -1,4 +1,5 @@
 import math
+import random
 from django.db import models
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
@@ -170,7 +171,6 @@ def generate_bracket(request, pk):
     total_rounds = math.ceil(math.log2(team_count))
     bracket_size = 2 ** total_rounds
 
-    # --- FIX: bulk_create all matches in ONE query instead of N queries ---
     all_matches_to_create = []
     for round_number in range(1, total_rounds + 1):
         match_count = bracket_size // (2 ** round_number)
@@ -185,15 +185,12 @@ def generate_bracket(request, pk):
 
     created_matches = Match.objects.bulk_create(all_matches_to_create)
 
-    # Rebuild all_round_matches dict from created matches
     all_round_matches = {}
     for match in created_matches:
         all_round_matches.setdefault(match.round_number, []).append(match)
-
     for round_number in all_round_matches:
         all_round_matches[round_number].sort(key=lambda m: m.match_number)
 
-    # Link next_match for each round
     matches_to_update = []
     for round_number in range(1, total_rounds):
         current_round = all_round_matches[round_number]
@@ -201,30 +198,56 @@ def generate_bracket(request, pk):
         for index, match in enumerate(current_round):
             match.next_match = next_round[index // 2]
             matches_to_update.append(match)
+    Match.objects.bulk_update(matches_to_update, ["next_match"])
 
-    Match.objects.bulk_update(matches_to_update, ["next_match"])  # ONE query
+    # --- FIXED: distribute byes evenly across bracket ---
+    slots = [None] * bracket_size
+    positions = list(range(bracket_size))
+    random.shuffle(positions)
+    for i, team in enumerate(teams):
+        slots[positions[i]] = team
 
-    # Assign teams to first round slots
-    slots = teams + [None] * (bracket_size - team_count)
     first_round_matches = all_round_matches[1]
     first_round_to_update = []
-
     for i, match in enumerate(first_round_matches):
         match.team1 = slots[i * 2]
         match.team2 = slots[i * 2 + 1]
+        if match.team1 is None and match.team2 is None:
+            match.status = "completed"
         first_round_to_update.append(match)
+    Match.objects.bulk_update(first_round_to_update, ["team1", "team2", "status"])
 
-    Match.objects.bulk_update(first_round_to_update, ["team1", "team2"])  # ONE query
+    # auto-advance teams with a bye
+    bye_advances = []
+    for match in first_round_to_update:
+        if match.team1 is not None and match.team2 is None:
+            match.winner = match.team1
+            match.status = "completed"
+            bye_advances.append(match)
+        elif match.team2 is not None and match.team1 is None:
+            match.winner = match.team2
+            match.status = "completed"
+            bye_advances.append(match)
 
-    final_match = all_round_matches[total_rounds][0]
-    if final_match.winner:
-        tournament.status = "completed"
-        tournament.champion = final_match.winner
-        tournament.save(update_fields=["status", "champion"])
-    else:
-        tournament.status = "published"
-        tournament.champion = None
-        tournament.save(update_fields=["status", "champion"])
+    if bye_advances:
+        Match.objects.bulk_update(bye_advances, ["winner", "status"])
+        next_round_updates = []
+        for match in bye_advances:
+            if match.next_match:
+                idx = first_round_to_update.index(match)
+                next_m = all_round_matches[2][idx // 2]
+                if next_m.team1 is None:
+                    next_m.team1 = match.winner
+                else:
+                    next_m.team2 = match.winner
+                if next_m not in next_round_updates:
+                    next_round_updates.append(next_m)
+        if next_round_updates:
+            Match.objects.bulk_update(next_round_updates, ["team1", "team2"])
+
+    tournament.status = "published"
+    tournament.champion = None
+    tournament.save(update_fields=["status", "champion"])
 
     messages.success(request, "Bracket generated successfully.")
     return redirect("tournament_detail", pk=tournament.id)

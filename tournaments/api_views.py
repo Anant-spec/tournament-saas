@@ -1,11 +1,11 @@
 import math
+import random
 from django.db import transaction
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import Tournament, Match
 from .serializers import TournamentSerializer, MatchSerializer
-from registrations.models import Team
 
 
 class TournamentViewSet(viewsets.ModelViewSet):
@@ -78,12 +78,51 @@ class TournamentViewSet(viewsets.ModelViewSet):
                 to_update.append(match)
         Match.objects.bulk_update(to_update, ['next_match'])
 
-        slots = teams + [None] * (bracket_size - len(teams))
+        # --- FIXED: distribute byes evenly across bracket ---
+        slots = [None] * bracket_size
+        positions = list(range(bracket_size))
+        random.shuffle(positions)
+        for i, team in enumerate(teams):
+            slots[positions[i]] = team
+
         first_round = round_map[1]
         for i, match in enumerate(first_round):
             match.team1 = slots[i * 2]
             match.team2 = slots[i * 2 + 1]
-        Match.objects.bulk_update(first_round, ['team1', 'team2'])
+            # auto-complete bye matches where both slots are empty
+            if match.team1 is None and match.team2 is None:
+                match.status = 'completed'
+
+        Match.objects.bulk_update(first_round, ['team1', 'team2', 'status'])
+
+        # auto-advance teams that have a bye (one team, no opponent)
+        bye_advances = []
+        for match in first_round:
+            if match.status == 'completed':
+                continue
+            if match.team1 is not None and match.team2 is None:
+                match.winner = match.team1
+                match.status = 'completed'
+                bye_advances.append(match)
+            elif match.team2 is not None and match.team1 is None:
+                match.winner = match.team2
+                match.status = 'completed'
+                bye_advances.append(match)
+
+        if bye_advances:
+            Match.objects.bulk_update(bye_advances, ['winner', 'status'])
+            # advance bye winners into round 2
+            next_round_updates = []
+            for match in bye_advances:
+                if match.next_match:
+                    next_m = round_map[2][round_map[1].index(match) // 2]
+                    if next_m.team1 is None:
+                        next_m.team1 = match.winner
+                    else:
+                        next_m.team2 = match.winner
+                    next_round_updates.append(next_m)
+            if next_round_updates:
+                Match.objects.bulk_update(next_round_updates, ['team1', 'team2'])
 
         tournament.status = 'published'
         tournament.save(update_fields=['status'])
@@ -94,7 +133,7 @@ class TournamentViewSet(viewsets.ModelViewSet):
 class MatchViewSet(viewsets.ModelViewSet):
     serializer_class = MatchSerializer
     permission_classes = [permissions.IsAuthenticated]
-    http_method_names = ['get', 'head', 'options']  # read-only; results go via custom action
+    http_method_names = ['get', 'head', 'options']
 
     def get_queryset(self):
         return Match.objects.filter(
