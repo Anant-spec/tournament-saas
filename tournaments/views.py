@@ -113,10 +113,6 @@ def tournament_delete(request, pk):
 
 
 def _build_stats(matches, registrations):
-    """
-    Compute tournament stats from a queryset of matches.
-    Returns a dict ready to be passed to the template context.
-    """
     all_matches = list(matches)
 
     real_matches = [m for m in all_matches if m.team1_id or m.team2_id]
@@ -271,15 +267,14 @@ def generate_bracket(request, pk):
     Single-elimination bracket using the industry-standard power-of-2 bye system.
 
     Given n teams:
-      - bracket_size = next power of 2 >= n  (e.g. 5 teams -> 8 slots)
-      - byes_needed  = bracket_size - n       (e.g. 8 - 5 = 3 byes)
-      - The first `byes_needed` teams skip round 1 and enter directly at round 2.
-      - The remaining `n - byes_needed` teams play real matches in round 1.
-      - From round 2 onwards the bracket is a perfect power-of-2 — no cascading
-        odd-team issues ever occur.
+      - bracket_size    = next power of 2 >= n
+      - byes_needed     = bracket_size - n          (teams that skip round 1)
+      - playing_teams   = teams[byes_needed:]        (always even-length)
+      - r1_match_count  = len(playing_teams) // 2   (NOT bracket_size // 2)
 
-    This matches the format used by Challonge, Battlefy, and all major esports
-    platforms (ESL, BLAST, etc.).
+    Round 1 only contains real matches for playing_teams.
+    Bye teams are placed directly into round 2 slots alongside round-1 feeders.
+    From round 2 onwards the bracket is a perfect power-of-2 -- no cascading issues.
     """
     tournament = get_object_or_404(
         Tournament.objects.select_for_update(),
@@ -309,50 +304,63 @@ def generate_bracket(request, pk):
 
     random.shuffle(teams)
 
-    # --- Power-of-2 bracket sizing ---
+    # --- Power-of-2 sizing ---
     team_count   = len(teams)
     total_rounds = math.ceil(math.log2(team_count))
-    bracket_size = 2 ** total_rounds          # next power of 2 >= team_count
-    byes_needed  = bracket_size - team_count  # teams that skip round 1
+    bracket_size = 2 ** total_rounds
+    byes_needed  = bracket_size - team_count
 
-    # Separate bye teams (skip round 1) from playing teams (compete in round 1)
-    bye_teams     = teams[:byes_needed]        # enter at round 2
-    playing_teams = teams[byes_needed:]        # play in round 1
-    # len(playing_teams) is always even: bracket_size - byes = 2*team_count - bracket_size
+    bye_teams     = teams[:byes_needed]   # skip round 1, enter at round 2
+    playing_teams = teams[byes_needed:]   # always even: 2*team_count - bracket_size
 
-    # --- Create all match slots for every round ---
+    r1_match_count = len(playing_teams) // 2  # KEY: use this, NOT bracket_size // 2
+    r2_match_count = bracket_size // 4        # round 2 is always a clean power-of-2
+
+    # --- Create match slots ---
+    # Round 1: only r1_match_count real matches
+    # Rounds 2..total_rounds: standard power-of-2 counts
     all_matches_to_create = []
-    for round_number in range(1, total_rounds + 1):
-        match_count = bracket_size // (2 ** round_number)
-        for match_number in range(1, match_count + 1):
+
+    for mn in range(1, r1_match_count + 1):
+        all_matches_to_create.append(
+            Match(tournament=tournament, round_number=1, match_number=mn)
+        )
+
+    for rn in range(2, total_rounds + 1):
+        match_count = bracket_size // (2 ** rn)
+        for mn in range(1, match_count + 1):
             all_matches_to_create.append(
-                Match(
-                    tournament=tournament,
-                    round_number=round_number,
-                    match_number=match_number,
-                )
+                Match(tournament=tournament, round_number=rn, match_number=mn)
             )
 
     created_matches = Match.objects.bulk_create(all_matches_to_create)
 
-    # Build lookup: {round_number: [match, ...]} sorted by match_number
+    # Build round_map: {round_number: [match, ...]} sorted by match_number
     round_map = {}
     for m in created_matches:
         round_map.setdefault(m.round_number, []).append(m)
     for r in round_map:
         round_map[r].sort(key=lambda m: m.match_number)
 
-    # --- Wire next_match pointers (round N -> round N+1) ---
+    # --- Wire next_match pointers ---
+    # Round 1 matches feed into the FIRST r1_match_count slots of round 2
+    # (bye teams will occupy the remaining round-2 slots)
     pointer_updates = []
-    for rn in range(1, total_rounds):
+    if 1 in round_map and 2 in round_map:
+        for i, match in enumerate(round_map[1]):
+            match.next_match = round_map[2][i // 2]
+            pointer_updates.append(match)
+
+    # Rounds 2 -> 3, 3 -> 4, etc. wire normally
+    for rn in range(2, total_rounds):
         for i, match in enumerate(round_map[rn]):
             match.next_match = round_map[rn + 1][i // 2]
             pointer_updates.append(match)
+
     if pointer_updates:
         Match.objects.bulk_update(pointer_updates, ["next_match"])
 
-    # --- Assign playing teams to round 1 matches ---
-    # playing_teams is always even-length so every match gets exactly 2 teams.
+    # --- Assign playing teams to round 1 ---
     r1_updates = []
     for i, match in enumerate(round_map[1]):
         match.team1 = playing_teams[i * 2]
@@ -360,24 +368,22 @@ def generate_bracket(request, pk):
         r1_updates.append(match)
     Match.objects.bulk_update(r1_updates, ["team1", "team2"])
 
-    # --- Place bye teams directly into round 2 slots ---
-    # Bye teams occupy the LAST slots in round 2 (after the round-1 feeders).
-    # Round 2 has bracket_size/4 matches.
-    # The first (len(playing_teams)//2) slots are fed by round-1 winners.
-    # The remaining `byes_needed` slots get bye teams, packed in pairs.
+    # --- Place bye teams into round 2 ---
+    # Round 2 layout:
+    #   slots 0 .. r1_match_count//2 - 1  : fed by round-1 winners (leave empty for now)
+    #   slots r1_match_count//2 .. end    : bye team pairs
     r2_updates = {}
-    r2_matches = round_map.get(2, [])
-    r1_feeder_count = len(playing_teams) // 2  # number of round-2 slots fed by round 1
-
-    for i, team in enumerate(bye_teams):
-        slot_index = r1_feeder_count + (i // 2)  # which round-2 match
-        if slot_index < len(r2_matches):
-            target = r2_matches[slot_index]
-            if target.team1 is None:
-                target.team1 = team
-            else:
-                target.team2 = team
-            r2_updates[target.pk] = target
+    if 2 in round_map and bye_teams:
+        bye_slot_start = r1_match_count // 2  # first round-2 slot for bye teams
+        for i, team in enumerate(bye_teams):
+            slot_index = bye_slot_start + (i // 2)
+            if slot_index < len(round_map[2]):
+                target = round_map[2][slot_index]
+                if target.team1 is None:
+                    target.team1 = team
+                else:
+                    target.team2 = team
+                r2_updates[target.pk] = target
 
     if r2_updates:
         Match.objects.bulk_update(r2_updates.values(), ["team1", "team2"])
@@ -386,13 +392,16 @@ def generate_bracket(request, pk):
     tournament.champion = None
     tournament.save(update_fields=["status", "champion"])
 
-    messages.success(
-        request,
-        f"Bracket generated: {len(playing_teams) // 2} round-1 match"
-        f"{'es' if len(playing_teams) // 2 != 1 else ''}, "
-        f"{byes_needed} team{'s' if byes_needed != 1 else ''} with a bye to round 2."
-        if byes_needed else "Bracket generated successfully."
-    )
+    if byes_needed:
+        messages.success(
+            request,
+            f"Bracket generated: {r1_match_count} round-1 match"
+            f"{'es' if r1_match_count != 1 else ''}, "
+            f"{byes_needed} team{'s' if byes_needed != 1 else ''} advance directly to round 2."
+        )
+    else:
+        messages.success(request, "Bracket generated successfully.")
+
     return redirect("tournament_detail", pk=tournament.id)
 
 
