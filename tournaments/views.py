@@ -259,22 +259,59 @@ def reset_bracket(request, pk):
     return redirect("tournament_detail", pk=tournament.pk)
 
 
+def _resolve_walkovers(round_map, total_rounds, tournament):
+    """
+    After bracket generation, scan every round for matches that have
+    exactly one team (team1 set, team2 None). These are walkover matches
+    caused by an odd bye team having no opponent in that round.
+    Auto-complete them and propagate the winner forward, recursively.
+    """
+    changed = True
+    while changed:
+        changed = False
+        updates = []
+        for rn in range(1, total_rounds + 1):
+            for match in round_map.get(rn, []):
+                if match.team1 and match.team2 is None and match.status != "completed":
+                    match.winner = match.team1
+                    match.status = "completed"
+                    updates.append(match)
+                    changed = True
+                    # Push winner into next match
+                    if match.next_match:
+                        next_m = match.next_match
+                        if next_m.team1 is None:
+                            next_m.team1 = match.winner
+                        elif next_m.team2 is None:
+                            next_m.team2 = match.winner
+                        if next_m not in updates:
+                            updates.append(next_m)
+        if updates:
+            seen = {m.pk: m for m in updates}
+            Match.objects.bulk_update(
+                seen.values(), ["team1", "team2", "winner", "status"]
+            )
+            # Refresh round_map from DB so next iteration sees updated state
+            updated_pks = set(seen.keys())
+            for rn in round_map:
+                for i, m in enumerate(round_map[rn]):
+                    if m.pk in updated_pks:
+                        round_map[rn][i] = seen[m.pk]
+
+
 @login_required
 @require_POST
 @transaction.atomic
 def generate_bracket(request, pk):
     """
-    Single-elimination bracket using the industry-standard power-of-2 bye system.
+    Single-elimination bracket where every team appears in round 1.
 
-    Given n teams:
-      - bracket_size    = next power of 2 >= n
-      - byes_needed     = bracket_size - n          (teams that skip round 1)
-      - playing_teams   = teams[byes_needed:]        (always even-length)
-      - r1_match_count  = len(playing_teams) // 2   (NOT bracket_size // 2)
-
-    Round 1 only contains real matches for playing_teams.
-    Bye teams are placed directly into round 2 slots alongside round-1 feeders.
-    From round 2 onwards the bracket is a perfect power-of-2 -- no cascading issues.
+    - Even teams: all matched up normally.
+    - Odd teams: last team gets a bye match (vs None), auto-completes,
+      winner advances to round 2.
+    - Round counts are dynamic: ceil(n/2) matches per round.
+    - If a round-2 (or later) match ends up with only 1 team due to
+      cascading odd counts, it is auto-completed as a walkover.
     """
     tournament = get_object_or_404(
         Tournament.objects.select_for_update(),
@@ -304,33 +341,27 @@ def generate_bracket(request, pk):
 
     random.shuffle(teams)
 
-    # --- Power-of-2 sizing ---
-    team_count   = len(teams)
-    total_rounds = math.ceil(math.log2(team_count))
-    bracket_size = 2 ** total_rounds
-    byes_needed  = bracket_size - team_count
+    # --- Build round structure: ceil(n/2) matches per round ---
+    # round_structure[rn] = match_count for that round
+    round_structure = {}
+    current_count = len(teams)
+    rn = 1
+    while current_count > 1:
+        round_structure[rn] = math.ceil(current_count / 2)
+        current_count = math.ceil(current_count / 2)
+        rn += 1
+    total_rounds = rn - 1
 
-    bye_teams     = teams[:byes_needed]   # skip round 1, enter at round 2
-    playing_teams = teams[byes_needed:]   # always even: 2*team_count - bracket_size
-
-    r1_match_count = len(playing_teams) // 2  # KEY: use this, NOT bracket_size // 2
-    r2_match_count = bracket_size // 4        # round 2 is always a clean power-of-2
-
-    # --- Create match slots ---
-    # Round 1: only r1_match_count real matches
-    # Rounds 2..total_rounds: standard power-of-2 counts
+    # --- Create all Match DB objects ---
     all_matches_to_create = []
-
-    for mn in range(1, r1_match_count + 1):
-        all_matches_to_create.append(
-            Match(tournament=tournament, round_number=1, match_number=mn)
-        )
-
-    for rn in range(2, total_rounds + 1):
-        match_count = bracket_size // (2 ** rn)
-        for mn in range(1, match_count + 1):
+    for round_number, match_count in round_structure.items():
+        for match_number in range(1, match_count + 1):
             all_matches_to_create.append(
-                Match(tournament=tournament, round_number=rn, match_number=mn)
+                Match(
+                    tournament=tournament,
+                    round_number=round_number,
+                    match_number=match_number,
+                )
             )
 
     created_matches = Match.objects.bulk_create(all_matches_to_create)
@@ -343,65 +374,53 @@ def generate_bracket(request, pk):
         round_map[r].sort(key=lambda m: m.match_number)
 
     # --- Wire next_match pointers ---
-    # Round 1 matches feed into the FIRST r1_match_count slots of round 2
-    # (bye teams will occupy the remaining round-2 slots)
     pointer_updates = []
-    if 1 in round_map and 2 in round_map:
-        for i, match in enumerate(round_map[1]):
-            match.next_match = round_map[2][i // 2]
-            pointer_updates.append(match)
-
-    # Rounds 2 -> 3, 3 -> 4, etc. wire normally
-    for rn in range(2, total_rounds):
+    for rn in range(1, total_rounds):
         for i, match in enumerate(round_map[rn]):
             match.next_match = round_map[rn + 1][i // 2]
             pointer_updates.append(match)
-
     if pointer_updates:
         Match.objects.bulk_update(pointer_updates, ["next_match"])
 
-    # --- Assign playing teams to round 1 ---
+    # --- Assign teams to round 1 ---
+    # Pair teams up; if odd count last team gets a bye (team2=None).
     r1_updates = []
+    bye_matches = []
     for i, match in enumerate(round_map[1]):
-        match.team1 = playing_teams[i * 2]
-        match.team2 = playing_teams[i * 2 + 1]
+        t1_idx = i * 2
+        t2_idx = i * 2 + 1
+        match.team1 = teams[t1_idx]
+        match.team2 = teams[t2_idx] if t2_idx < len(teams) else None
+        if match.team2 is None:
+            # Bye: auto-complete immediately
+            match.winner = match.team1
+            match.status = "completed"
+            bye_matches.append(match)
         r1_updates.append(match)
-    Match.objects.bulk_update(r1_updates, ["team1", "team2"])
+    Match.objects.bulk_update(r1_updates, ["team1", "team2", "winner", "status"])
 
-    # --- Place bye teams into round 2 ---
-    # Round 2 layout:
-    #   slots 0 .. r1_match_count//2 - 1  : fed by round-1 winners (leave empty for now)
-    #   slots r1_match_count//2 .. end    : bye team pairs
-    r2_updates = {}
-    if 2 in round_map and bye_teams:
-        bye_slot_start = r1_match_count // 2  # first round-2 slot for bye teams
-        for i, team in enumerate(bye_teams):
-            slot_index = bye_slot_start + (i // 2)
-            if slot_index < len(round_map[2]):
-                target = round_map[2][slot_index]
-                if target.team1 is None:
-                    target.team1 = team
+    # --- Propagate bye winners into round 2 ---
+    if bye_matches and 2 in round_map:
+        r2_updates = {}
+        for match in bye_matches:
+            if match.next_match:
+                next_m = match.next_match
+                if next_m.team1 is None:
+                    next_m.team1 = match.winner
                 else:
-                    target.team2 = team
-                r2_updates[target.pk] = target
+                    next_m.team2 = match.winner
+                r2_updates[next_m.pk] = next_m
+        if r2_updates:
+            Match.objects.bulk_update(r2_updates.values(), ["team1", "team2"])
 
-    if r2_updates:
-        Match.objects.bulk_update(r2_updates.values(), ["team1", "team2"])
+    # --- Resolve any cascading walkovers (odd teams in round 2+) ---
+    _resolve_walkovers(round_map, total_rounds, tournament)
 
     tournament.status = "published"
     tournament.champion = None
     tournament.save(update_fields=["status", "champion"])
 
-    if byes_needed:
-        messages.success(
-            request,
-            f"Bracket generated: {r1_match_count} round-1 match"
-            f"{'es' if r1_match_count != 1 else ''}, "
-            f"{byes_needed} team{'s' if byes_needed != 1 else ''} advance directly to round 2."
-        )
-    else:
-        messages.success(request, "Bracket generated successfully.")
-
+    messages.success(request, "Bracket generated successfully.")
     return redirect("tournament_detail", pk=tournament.id)
 
 
@@ -453,6 +472,28 @@ def report_match_result(request, match_id):
         else:
             messages.error(request, "Next match already has two teams assigned.")
             return redirect("tournament_detail", pk=tournament.id)
+
+        # Check if next match is now a walkover (only 1 team, no second feeder coming)
+        next_match.refresh_from_db()
+        if next_match.team1 and next_match.team2 is None:
+            # Verify no pending round-1 match feeds into this slot
+            feeders = Match.objects.filter(
+                tournament=tournament,
+                next_match=next_match,
+                status__in=["pending", "ongoing"]
+            )
+            if not feeders.exists():
+                next_match.winner = next_match.team1
+                next_match.status = "completed"
+                next_match.save(update_fields=["winner", "status"])
+                # Propagate this walkover winner further
+                if next_match.next_match:
+                    final_next = Match.objects.select_for_update().get(pk=next_match.next_match.pk)
+                    if final_next.team1 is None:
+                        final_next.team1 = next_match.winner
+                    else:
+                        final_next.team2 = next_match.winner
+                    final_next.save(update_fields=["team1", "team2"])
 
         if tournament.status in ["draft", "published"]:
             tournament.status = "ongoing"
