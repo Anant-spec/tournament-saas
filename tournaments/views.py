@@ -150,8 +150,8 @@ def _build_stats(matches, registrations):
     # Per-team win rates
     wins   = defaultdict(int)
     losses = defaultdict(int)
-    appearances = defaultdict(int)   # times the team appeared in a completed match
-    team_names  = {}                 # id -> name lookup
+    appearances = defaultdict(int)
+    team_names  = {}
 
     for m in completed:
         if m.team1:
@@ -166,7 +166,6 @@ def _build_stats(matches, registrations):
             if loser_id:
                 losses[loser_id] += 1
 
-    # Also seed team names from registrations so 0-match teams appear
     for reg in registrations:
         if reg.team_id not in team_names:
             team_names[reg.team_id] = reg.team.name
@@ -185,7 +184,6 @@ def _build_stats(matches, registrations):
             "win_pct": rate,
         })
 
-    # Sort: most wins first, then alphabetical
     team_stats.sort(key=lambda t: (-t["wins"], t["name"]))
 
     return {
@@ -246,7 +244,6 @@ def reset_bracket(request, pk):
         organization__owner=request.user
     )
 
-    # Confirm the user typed the tournament name correctly
     confirm_name = request.POST.get("confirm_name", "").strip()
     if confirm_name != tournament.name:
         messages.error(request, "Tournament name did not match. Bracket reset cancelled.")
@@ -256,21 +253,11 @@ def reset_bracket(request, pk):
         messages.info(request, "No bracket to reset.")
         return redirect("tournament_detail", pk=tournament.pk)
 
-    # Delete all matches
     deleted_count, _ = tournament.matches.all().delete()
 
-    # Reset tournament state
     tournament.status = "draft"
     tournament.champion = None
     tournament.save(update_fields=["status", "champion"])
-
-    # Keep registrations approved — teams stay approved so bracket
-    # can be regenerated immediately without re-approving everyone.
-    # (Uncomment below if you want to revert all to pending instead.)
-    # from registrations.models import Registration
-    # Registration.objects.filter(
-    #     tournament=tournament, status="approved"
-    # ).update(status="pending", approved_at=None)
 
     messages.success(
         request,
@@ -310,81 +297,92 @@ def generate_bracket(request, pk):
         messages.error(request, "At least 2 approved teams are required to generate a bracket.")
         return redirect("tournament_detail", pk=tournament.id)
 
-    team_count = len(teams)
-    total_rounds = math.ceil(math.log2(team_count))
-    bracket_size = 2 ** total_rounds
+    random.shuffle(teams)
 
+    # --- Build round structure dynamically ---
+    # Each round: pair teams up; if odd count, last team gets a bye match (auto-win).
+    # Rounds are built until only 1 team remains (the champion slot).
+    # round_slots = {round_number: [(team1_or_None, team2_or_None), ...]}
+    round_slots = {}
+    current_teams = list(teams)
+    round_number = 1
+
+    while len(current_teams) > 1:
+        pairs = []
+        for i in range(0, len(current_teams) - 1, 2):
+            pairs.append((current_teams[i], current_teams[i + 1]))
+        if len(current_teams) % 2 == 1:
+            # Odd team out: gets a bye match, auto-advances
+            pairs.append((current_teams[-1], None))
+        round_slots[round_number] = pairs
+        # Winners of this round advance — ceil(n/2) teams next round
+        current_teams = [None] * math.ceil(len(current_teams) / 2)
+        round_number += 1
+
+    total_rounds = round_number - 1
+
+    # --- Create all Match DB objects ---
     all_matches_to_create = []
-    for round_number in range(1, total_rounds + 1):
-        match_count = bracket_size // (2 ** round_number)
-        for match_number in range(1, match_count + 1):
+    for rn, pairs in round_slots.items():
+        for mn in range(1, len(pairs) + 1):
             all_matches_to_create.append(
                 Match(
                     tournament=tournament,
-                    round_number=round_number,
-                    match_number=match_number,
+                    round_number=rn,
+                    match_number=mn,
                 )
             )
 
     created_matches = Match.objects.bulk_create(all_matches_to_create)
 
-    all_round_matches = {}
-    for match in created_matches:
-        all_round_matches.setdefault(match.round_number, []).append(match)
-    for round_number in all_round_matches:
-        all_round_matches[round_number].sort(key=lambda m: m.match_number)
+    # Build round_map lookup: {round_number: [match, ...]} sorted by match_number
+    round_map = {}
+    for m in created_matches:
+        round_map.setdefault(m.round_number, []).append(m)
+    for r in round_map:
+        round_map[r].sort(key=lambda m: m.match_number)
 
-    matches_to_update = []
-    for round_number in range(1, total_rounds):
-        current_round = all_round_matches[round_number]
-        next_round = all_round_matches[round_number + 1]
-        for index, match in enumerate(current_round):
-            match.next_match = next_round[index // 2]
-            matches_to_update.append(match)
-    Match.objects.bulk_update(matches_to_update, ["next_match"])
+    # --- Wire next_match pointers ---
+    pointer_updates = []
+    for rn in range(1, total_rounds):
+        for i, match in enumerate(round_map[rn]):
+            match.next_match = round_map[rn + 1][i // 2]
+            pointer_updates.append(match)
+    if pointer_updates:
+        Match.objects.bulk_update(pointer_updates, ["next_match"])
 
-    slots = [None] * bracket_size
-    positions = list(range(bracket_size))
-    random.shuffle(positions)
-    for i, team in enumerate(teams):
-        slots[positions[i]] = team
-
-    first_round_matches = all_round_matches[1]
-    first_round_to_update = []
-    for i, match in enumerate(first_round_matches):
-        match.team1 = slots[i * 2]
-        match.team2 = slots[i * 2 + 1]
-        if match.team1 is None and match.team2 is None:
-            match.status = "completed"
-        first_round_to_update.append(match)
-    Match.objects.bulk_update(first_round_to_update, ["team1", "team2", "status"])
-
+    # --- Assign teams to round 1 matches + detect bye matches ---
+    r1_updates = []
     bye_advances = []
-    for match in first_round_to_update:
-        if match.team1 is not None and match.team2 is None:
-            match.winner = match.team1
-            match.status = "completed"
-            bye_advances.append(match)
-        elif match.team2 is not None and match.team1 is None:
-            match.winner = match.team2
+
+    for i, match in enumerate(round_map[1]):
+        t1, t2 = round_slots[1][i]
+        match.team1 = t1
+        match.team2 = t2
+
+        if t2 is None:
+            # Bye match: auto-complete, team1 advances
+            match.winner = t1
             match.status = "completed"
             bye_advances.append(match)
 
-    if bye_advances:
-        Match.objects.bulk_update(bye_advances, ["winner", "status"])
-        next_round_updates = []
+        r1_updates.append(match)
+
+    Match.objects.bulk_update(r1_updates, ["team1", "team2", "winner", "status"])
+
+    # --- Propagate bye winners into round 2 ---
+    if bye_advances and 2 in round_map:
+        r2_updates = {}
         for match in bye_advances:
             if match.next_match:
-                idx = first_round_to_update.index(match)
-                next_m = all_round_matches[2][idx // 2]
+                next_m = match.next_match
                 if next_m.team1 is None:
                     next_m.team1 = match.winner
                 else:
                     next_m.team2 = match.winner
-                if next_m not in next_round_updates:
-                    next_round_updates.append(next_m)
-        if next_round_updates:
-            Match.objects.bulk_update(next_round_updates, ["team1", "team2"])
+                r2_updates[next_m.pk] = next_m
+        if r2_updates:
+            Match.objects.bulk_update(r2_updates.values(), ["team1", "team2"])
 
     tournament.status = "published"
     tournament.champion = None
@@ -392,7 +390,6 @@ def generate_bracket(request, pk):
 
     messages.success(request, "Bracket generated successfully.")
     return redirect("tournament_detail", pk=tournament.id)
-
 
 
 @login_required
@@ -467,8 +464,6 @@ def report_match_result(request, match_id):
 
     messages.success(request, "Match result reported successfully.")
     return redirect("tournament_detail", pk=tournament.id)
-
-
 
 
 @login_required
