@@ -1,11 +1,13 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from organizations.models import Organization
 from tournaments.models import Tournament
 from registrations.models import Registration
 
 def home(request):
-    return render(request, "core/home.html")
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+    return redirect('login')
 
 @login_required
 def dashboard(request):
