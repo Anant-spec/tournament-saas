@@ -115,3 +115,11 @@ SPECTACULAR_SETTINGS = {
     'DESCRIPTION': 'Multi-tenant tournament management platform',
     'VERSION': '1.0.0',
 }
+
+ALLOWED_HOSTS = [".up.railway.app"]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://tournament-status.up.railway.app",
+]
+
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
