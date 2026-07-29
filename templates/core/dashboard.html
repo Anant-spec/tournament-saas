@@ -54,13 +54,12 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    animation: loaderFadeOut 0.6s ease-out 18900ms forwards;
+    animation: loaderFadeOut 0.4s ease-out 1800ms forwards;
   }
   
   @keyframes loaderFadeOut {
-    0% { opacity: 1; }
-    95% { opacity: 1; }
-    100% { opacity: 0; display: none; }
+    0%   { opacity: 1; pointer-events: all; }
+    100% { opacity: 0; pointer-events: none; }
   }
   
   #loader .nexus-text {
@@ -83,11 +82,12 @@
     height: 100%;
     background: var(--amber);
     width: 0%;
-    animation: progressLoad 18900ms linear forwards;
+    animation: progressLoad 1800ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
   
   @keyframes progressLoad {
-    0% { width: 0%; }
+    0%   { width: 0%; }
+    60%  { width: 75%; }
     100% { width: 100%; }
   }
   
@@ -113,7 +113,7 @@
     z-index: 10;
     max-width: 1140px;
     margin: 0 auto;
-    padding-top: 40px 20px 40px;
+    padding: 40px 20px;
   }
   
   .cmd-header {
@@ -298,9 +298,9 @@
     letter-spacing: 0.02em;
   }
   
-  .strip-val.green { color: #34d399; }
-  .strip-val.amber { color: var(--amber); }
-  .strip-val.muted { color: var(--dim); }
+  .strip-val.green  { color: #34d399; }
+  .strip-val.amber  { color: var(--amber); }
+  .strip-val.muted  { color: var(--dim); }
   .strip-val.purple { color: #a78bfa; }
   
   .strip-label {
@@ -369,10 +369,10 @@
     box-shadow: 0 0 6px currentColor;
   }
   
-  .dot-ongoing { background: var(--amber); color: var(--amber); }
-  .dot-draft { background: var(--dim); color: var(--dim); }
-  .dot-completed { background: #a78bfa; color: #a78bfa; }
-  .dot-published { background: #60a5fa; color: #60a5fa; }
+  .dot-ongoing   { background: var(--amber); color: var(--amber); }
+  .dot-draft     { background: var(--dim);   color: var(--dim); }
+  .dot-completed { background: #a78bfa;      color: #a78bfa; }
+  .dot-published { background: #60a5fa;      color: #60a5fa; }
   
   .t-card-body { flex: 1; min-width: 0; }
   
@@ -407,10 +407,10 @@
     border: 1px solid transparent;
   }
   
-  .badge-draft { background: rgba(107,122,153,0.12); color: var(--dim); border-color: rgba(107,122,153,0.2); }
-  .badge-published { background: var(--blue-bg); color: #60a5fa; border-color: rgba(59,130,246,0.2); }
-  .badge-ongoing { background: var(--amber-bg); color: var(--amber); border-color: rgba(245,158,11,0.2); }
-  .badge-completed { background: var(--purple-bg); color: #a78bfa; border-color: rgba(139,92,246,0.2); }
+  .badge-draft     { background: rgba(107,122,153,0.12); color: var(--dim);   border-color: rgba(107,122,153,0.2); }
+  .badge-published { background: var(--blue-bg);         color: #60a5fa;      border-color: rgba(59,130,246,0.2); }
+  .badge-ongoing   { background: var(--amber-bg);        color: var(--amber); border-color: rgba(245,158,11,0.2); }
+  .badge-completed { background: var(--purple-bg);       color: #a78bfa;      border-color: rgba(139,92,246,0.2); }
   
   .side-panel {
     background: var(--plate);
@@ -460,7 +460,7 @@
   
   .reg-count.amber { color: var(--amber); }
   .reg-count.green { color: #34d399; }
-  .reg-count.red { color: #f87171; }
+  .reg-count.red   { color: #f87171; }
   
   .quick-actions { display: flex; flex-direction: column; gap: 8px; padding: 16px; }
   
@@ -670,25 +670,28 @@
   const loaderSteps = [
     "Initializing Command Center...",
     "Loading Tournament Data...",
-    "Calibrating 3D Environment...",
-    "Syncing Registrations...",
     "System Ready."
   ];
-  
+
   const stepText = document.getElementById('step-text');
   let currentStep = 0;
-  const stepDuration = 420;
-  
+  const stepDuration = 600;
+
   function nextStep() {
     if (currentStep < loaderSteps.length) {
       stepText.textContent = loaderSteps[currentStep];
       currentStep++;
-      const randomDelay = Math.random() * 180;
-      setTimeout(nextStep, stepDuration + randomDelay);
+      setTimeout(nextStep, stepDuration);
     }
   }
-  
+
   setTimeout(nextStep, 100);
+
+  // Hide loader from DOM after animation completes so it doesn't block clicks
+  const loader = document.getElementById('loader');
+  loader.addEventListener('animationend', () => {
+    loader.style.display = 'none';
+  });
 
   function animCount(el, target, duration) {
     let start = null;
@@ -739,7 +742,6 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   const bracketGroup = new THREE.Group();
-  const lineMaterial = new THREE.LineBasicMaterial({ color: 0xf59e0b });
 
   const rounds = 4;
   const Y_SPACING = 1.2;
@@ -775,7 +777,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const velocities = [];
 
   for (let i = 0; i < particleCount; i++) {
-    positions[i * 3] = (Math.random() - 0.5) * 15;
+    positions[i * 3]     = (Math.random() - 0.5) * 15;
     positions[i * 3 + 1] = (Math.random() - 0.5) * 15;
     positions[i * 3 + 2] = (Math.random() - 0.5) * 15;
     velocities.push({
@@ -812,16 +814,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const particlePositions = particles.geometry.attributes.position.array;
     for (let i = 0; i < particleCount; i++) {
-      particlePositions[i * 3] += velocities[i].x;
+      particlePositions[i * 3]     += velocities[i].x;
       particlePositions[i * 3 + 1] += velocities[i].y;
       particlePositions[i * 3 + 2] += velocities[i].z;
 
-      if (particlePositions[i * 3] > 8) particlePositions[i * 3] = -8;
-      if (particlePositions[i * 3] < -8) particlePositions[i * 3] = 8;
-      if (particlePositions[i * 3 + 1] > 8) particlePositions[i * 3 + 1] = -8;
-      if (particlePositions[i * 3 + 1] < -8) particlePositions[i * 3 + 1] = 8;
-      if (particlePositions[i * 3 + 2] > 8) particlePositions[i * 3 + 2] = -8;
-      if (particlePositions[i * 3 + 2] < -8) particlePositions[i * 3 + 2] = 8;
+      if (particlePositions[i * 3]     >  8) particlePositions[i * 3]     = -8;
+      if (particlePositions[i * 3]     < -8) particlePositions[i * 3]     =  8;
+      if (particlePositions[i * 3 + 1] >  8) particlePositions[i * 3 + 1] = -8;
+      if (particlePositions[i * 3 + 1] < -8) particlePositions[i * 3 + 1] =  8;
+      if (particlePositions[i * 3 + 2] >  8) particlePositions[i * 3 + 2] = -8;
+      if (particlePositions[i * 3 + 2] < -8) particlePositions[i * 3 + 2] =  8;
     }
     particles.geometry.attributes.position.needsUpdate = true;
 

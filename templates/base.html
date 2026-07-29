@@ -53,7 +53,7 @@
             border-bottom: 1px solid var(--rim);
             position: sticky;
             top: 0;
-            z-index: 50;
+            z-index: 100;
         }
 
         .nav-inner {
@@ -76,15 +76,16 @@
             text-decoration: none;
             text-transform: uppercase;
             flex-shrink: 0;
+            z-index: 101;
         }
 
         .nav-brand span { color: var(--pale); }
 
+        /* Desktop links */
         .nav-links {
             display: flex;
             align-items: center;
             gap: 2px;
-            flex-wrap: wrap;
         }
 
         .nav-links a {
@@ -98,10 +99,18 @@
             letter-spacing: 0.06em;
             text-transform: uppercase;
             transition: color 0.15s, background 0.15s;
+            white-space: nowrap;
         }
 
-        .nav-links a:hover { color: var(--wire); background: var(--panel); }
+        .nav-links a:hover  { color: var(--wire); background: var(--panel); }
         .nav-links a.active { color: var(--amber); background: var(--amber-bg); }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
 
         .nav-cta {
             background: var(--amber);
@@ -115,11 +124,153 @@
             border-radius: var(--radius-sm);
             text-decoration: none;
             transition: background 0.15s;
-            flex-shrink: 0;
             white-space: nowrap;
         }
 
         .nav-cta:hover { background: var(--amber-hot); color: var(--ink); }
+
+        /* ── HAMBURGER ── */
+        .nav-hamburger {
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            gap: 5px;
+            width: 44px;
+            height: 44px;
+            padding: 10px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            z-index: 101;
+            flex-shrink: 0;
+        }
+
+        .nav-hamburger span {
+            display: block;
+            width: 22px;
+            height: 2px;
+            background: var(--pale);
+            border-radius: 2px;
+            transition: transform 0.25s cubic-bezier(0.16,1,0.3,1),
+                        opacity 0.2s ease,
+                        background 0.15s;
+            transform-origin: center;
+        }
+
+        .nav-hamburger:hover span { background: var(--wire); }
+
+        /* Animate to X when open */
+        .nav-hamburger.is-open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+        .nav-hamburger.is-open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+        .nav-hamburger.is-open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+        /* ── MOBILE DRAWER ── */
+        .nav-drawer {
+            display: none; /* shown only on mobile */
+            position: fixed;
+            top: 56px;
+            left: 0;
+            right: 0;
+            background: var(--steel);
+            border-bottom: 1px solid var(--rim);
+            z-index: 99;
+            padding: 12px 16px 20px;
+            flex-direction: column;
+            gap: 4px;
+            /* slide-down animation */
+            transform: translateY(-8px);
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 0.25s cubic-bezier(0.16,1,0.3,1),
+                        opacity 0.2s ease;
+        }
+
+        .nav-drawer.is-open {
+            transform: translateY(0);
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .nav-drawer a {
+            display: block;
+            color: var(--dim);
+            text-decoration: none;
+            padding: 11px 14px;
+            border-radius: var(--radius-sm);
+            font-size: 0.9rem;
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            transition: color 0.15s, background 0.15s;
+            /* touch tap target ≥44px via padding */
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-drawer a:hover  { color: var(--wire); background: var(--panel); }
+        .nav-drawer a.active { color: var(--amber); background: var(--amber-bg); }
+
+        .nav-drawer-divider {
+            height: 1px;
+            background: var(--rim);
+            margin: 8px 0;
+        }
+
+        .nav-drawer .nav-cta {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 44px;
+            margin-top: 4px;
+            border-radius: var(--radius);
+            font-size: 0.85rem;
+        }
+
+        .nav-drawer-logout {
+            width: 100%;
+            min-height: 44px;
+            margin-top: 4px;
+        }
+
+        .nav-drawer-logout button {
+            width: 100%;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: 1px solid var(--rim);
+            border-radius: var(--radius);
+            color: var(--dim);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: color 0.15s, border-color 0.15s, background 0.15s;
+        }
+
+        .nav-drawer-logout button:hover {
+            color: var(--wire);
+            border-color: var(--ghost);
+            background: var(--panel);
+        }
+
+        /* Overlay behind drawer */
+        .nav-overlay {
+            display: none;
+            position: fixed;
+            inset: 56px 0 0 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 98;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .nav-overlay.is-open { opacity: 1; }
 
         /* ── LAYOUT ── */
         .container {
@@ -162,18 +313,11 @@
             box-shadow: 0 8px 24px rgba(0,0,0,0.4);
         }
 
-        .toast.show {
-            transform: translateX(0);
-            opacity: 1;
-        }
+        .toast.show  { transform: translateX(0); opacity: 1; }
+        .toast.hide  { transform: translateX(120%); opacity: 0; }
 
-        .toast.hide {
-            transform: translateX(120%);
-            opacity: 0;
-        }
-
-        .toast-icon { font-size: 1rem; flex-shrink: 0; line-height: 1.4; }
-        .toast-body { flex: 1; }
+        .toast-icon  { font-size: 1rem; flex-shrink: 0; line-height: 1.4; }
+        .toast-body  { flex: 1; }
 
         .toast-close {
             flex-shrink: 0;
@@ -192,11 +336,9 @@
         }
         .toast-close:hover { opacity: 0.9; }
 
-        /* Progress bar that drains over the auto-dismiss duration */
         .toast-progress {
             position: absolute;
-            bottom: 0;
-            left: 0;
+            bottom: 0; left: 0;
             height: 2px;
             border-radius: 0 0 var(--radius) var(--radius);
             width: 100%;
@@ -210,34 +352,14 @@
             to   { transform: scaleX(0); }
         }
 
-        /* Colour variants */
-        .toast-success {
-            background: #0e2820;
-            color: #34d399;
-            border-color: rgba(16,185,129,0.25);
-        }
+        .toast-success  { background: #0e2820; color: #34d399; border-color: rgba(16,185,129,0.25); }
         .toast-success .toast-progress { background: #10b981; }
-
-        .toast-error {
-            background: #250f0f;
-            color: #f87171;
-            border-color: rgba(239,68,68,0.25);
-        }
-        .toast-error .toast-progress { background: #ef4444; }
-
-        .toast-warning {
-            background: #1f1506;
-            color: var(--amber);
-            border-color: rgba(245,158,11,0.25);
-        }
+        .toast-error    { background: #250f0f; color: #f87171; border-color: rgba(239,68,68,0.25); }
+        .toast-error .toast-progress   { background: #ef4444; }
+        .toast-warning  { background: #1f1506; color: var(--amber); border-color: rgba(245,158,11,0.25); }
         .toast-warning .toast-progress { background: var(--amber); }
-
-        .toast-info {
-            background: #0d1729;
-            color: #60a5fa;
-            border-color: rgba(59,130,246,0.25);
-        }
-        .toast-info .toast-progress { background: #3b82f6; }
+        .toast-info     { background: #0d1729; color: #60a5fa; border-color: rgba(59,130,246,0.25); }
+        .toast-info .toast-progress    { background: #3b82f6; }
 
         @media (max-width: 480px) {
             #toast-container { bottom: 16px; right: 12px; left: 12px; }
@@ -304,11 +426,7 @@
             color: var(--wire);
         }
 
-        .page-meta {
-            font-size: 0.82rem;
-            color: var(--dim);
-            margin-top: 4px;
-        }
+        .page-meta { font-size: 0.82rem; color: var(--dim); margin-top: 4px; }
 
         /* ── BADGES ── */
         .badge {
@@ -342,9 +460,7 @@
             margin-bottom: 16px;
         }
 
-        .card-accent {
-            border-left: 3px solid var(--amber);
-        }
+        .card-accent { border-left: 3px solid var(--amber); }
 
         /* ── STAT CARDS ── */
         .stats-grid {
@@ -380,9 +496,7 @@
         }
 
         /* ── SECTION ── */
-        .section {
-            margin-bottom: 32px;
-        }
+        .section { margin-bottom: 32px; }
 
         .section-header {
             display: flex;
@@ -394,11 +508,7 @@
         }
 
         /* ── DIVIDER ── */
-        hr {
-            border: none;
-            border-top: 1px solid var(--rim);
-            margin: 28px 0;
-        }
+        hr { border: none; border-top: 1px solid var(--rim); margin: 28px 0; }
 
         /* ── BUTTONS ── */
         .btn {
@@ -421,29 +531,19 @@
             white-space: nowrap;
         }
 
-        .btn-primary  { background: var(--amber);  color: var(--ink);   border-color: var(--amber); }
+        .btn-primary        { background: var(--amber);    color: var(--ink); border-color: var(--amber); }
         .btn-primary:hover  { background: var(--amber-hot); border-color: var(--amber-hot); color: var(--ink); }
-
-        .btn-secondary { background: var(--panel); color: var(--pale); border-color: var(--rim); }
-        .btn-secondary:hover { background: var(--rim); color: var(--wire); }
-
-        .btn-danger   { background: var(--red-bg); color: #f87171; border-color: rgba(239,68,68,0.3); }
-        .btn-danger:hover   { background: var(--red); color: white; border-color: var(--red); }
-
-        .btn-success  { background: var(--green-bg); color: #34d399; border-color: rgba(16,185,129,0.3); }
-        .btn-success:hover  { background: var(--green); color: white; border-color: var(--green); }
-
-        .btn-ghost    { background: transparent; color: var(--dim); border-color: var(--rim); }
+        .btn-secondary      { background: var(--panel);  color: var(--pale); border-color: var(--rim); }
+        .btn-secondary:hover{ background: var(--rim);    color: var(--wire); }
+        .btn-danger         { background: var(--red-bg); color: #f87171; border-color: rgba(239,68,68,0.3); }
+        .btn-danger:hover   { background: var(--red);    color: white;   border-color: var(--red); }
+        .btn-success        { background: var(--green-bg); color: #34d399; border-color: rgba(16,185,129,0.3); }
+        .btn-success:hover  { background: var(--green);  color: white;   border-color: var(--green); }
+        .btn-ghost          { background: transparent;   color: var(--dim); border-color: var(--rim); }
         .btn-ghost:hover    { color: var(--wire); border-color: var(--ghost); }
+        .btn-sm             { min-height: 30px; padding: 5px 12px; font-size: 0.74rem; }
 
-        .btn-sm { min-height: 30px; padding: 5px 12px; font-size: 0.74rem; }
-
-        .btn-group {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 8px;
-        }
+        .btn-group { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 
         /* ── TABLES ── */
         .table-wrap {
@@ -453,11 +553,7 @@
             overflow: hidden;
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 560px;
-        }
+        table { width: 100%; border-collapse: collapse; min-width: 560px; }
 
         th {
             background: var(--panel);
@@ -526,33 +622,13 @@
             box-shadow: 0 0 0 3px rgba(245,158,11,0.1);
         }
 
-        .form-card select option { background: var(--panel); }
+        .form-card select option   { background: var(--panel); }
+        .form-card textarea        { min-height: 100px; resize: vertical; }
+        .form-card input[type="checkbox"] { width: auto; min-height: auto; accent-color: var(--amber); }
 
-        .form-card textarea { min-height: 100px; resize: vertical; }
-
-        .form-card input[type="checkbox"] {
-            width: auto;
-            min-height: auto;
-            accent-color: var(--amber);
-        }
-
-        .errorlist {
-            list-style: none;
-            margin-top: 4px;
-        }
-
-        .errorlist li {
-            color: #f87171;
-            font-size: 0.78rem;
-            padding: 2px 0;
-        }
-
-        .helptext {
-            font-size: 0.75rem;
-            color: var(--dim);
-            margin-top: 4px;
-            display: block;
-        }
+        .errorlist { list-style: none; margin-top: 4px; }
+        .errorlist li { color: #f87171; font-size: 0.78rem; padding: 2px 0; }
+        .helptext { font-size: 0.75rem; color: var(--dim); margin-top: 4px; display: block; }
 
         /* ── MATCH CARDS ── */
         .match-card {
@@ -607,12 +683,7 @@
             gap: 8px;
         }
 
-        .round-header::before {
-            content: '';
-            width: 20px;
-            height: 1px;
-            background: var(--amber);
-        }
+        .round-header::before { content: ''; width: 20px; height: 1px; background: var(--amber); }
 
         /* ── EMPTY STATE ── */
         .empty-state {
@@ -623,23 +694,9 @@
             border-radius: var(--radius-lg);
         }
 
-        .empty-state-icon {
-            font-size: 2.5rem;
-            margin-bottom: 12px;
-            opacity: 0.4;
-        }
-
-        .empty-state h3 {
-            color: var(--pale);
-            margin-bottom: 6px;
-            font-size: 1rem;
-        }
-
-        .empty-state p {
-            color: var(--dim);
-            font-size: 0.85rem;
-            margin-bottom: 20px;
-        }
+        .empty-state-icon { font-size: 2.5rem; margin-bottom: 12px; opacity: 0.4; }
+        .empty-state h3   { color: var(--pale); margin-bottom: 6px; font-size: 1rem; }
+        .empty-state p    { color: var(--dim); font-size: 0.85rem; margin-bottom: 20px; }
 
         /* ── TOURNAMENT GRID ── */
         .tournament-grid {
@@ -683,12 +740,7 @@
         }
 
         .tournament-card-title:hover { color: var(--amber); }
-
-        .tournament-card-meta {
-            font-size: 0.78rem;
-            color: var(--dim);
-            margin-bottom: 14px;
-        }
+        .tournament-card-meta { font-size: 0.78rem; color: var(--dim); margin-bottom: 14px; }
 
         /* ── ORG GRID ── */
         .org-grid {
@@ -735,24 +787,10 @@
         .danger-zone h2 { color: #f87171; }
         .danger-zone p  { color: var(--pale); font-size: 0.88rem; margin: 8px 0 20px; }
 
-
-        .bracket-board {
-            display: flex;
-            gap: 20px;
-            overflow-x: auto;
-            padding-bottom: 8px;
-        }
-
-        .bracket-round {
-            min-width: 280px;
-            flex: 0 0 280px;
-        }
-
-        .bracket-round-stack {
-            display: flex;
-            flex-direction: column;
-            gap: 18px;
-        }
+        /* ── BRACKET ── */
+        .bracket-board { display: flex; gap: 20px; overflow-x: auto; padding-bottom: 8px; }
+        .bracket-round { min-width: 280px; flex: 0 0 280px; }
+        .bracket-round-stack { display: flex; flex-direction: column; gap: 18px; }
 
         .bracket-team {
             background: var(--plate);
@@ -774,35 +812,32 @@
             color: #34d399;
         }
 
-        .bracket-board::-webkit-scrollbar {
-            height: 10px;
-        }
-
-        .bracket-board::-webkit-scrollbar-thumb {
-            background: var(--rim);
-            border-radius: 999px;
-        }
-
-        .bracket-board::-webkit-scrollbar-track {
-            background: var(--panel);
-        }
+        .bracket-board::-webkit-scrollbar        { height: 10px; }
+        .bracket-board::-webkit-scrollbar-thumb  { background: var(--rim); border-radius: 999px; }
+        .bracket-board::-webkit-scrollbar-track  { background: var(--panel); }
 
         /* ── UTILITY ── */
-        .text-muted  { color: var(--dim); }
-        .text-amber  { color: var(--amber); }
-        .text-green  { color: var(--green); }
-        .text-red    { color: var(--red); }
-        .text-sm     { font-size: 0.82rem; }
-        .mono        { font-family: 'Space Mono', monospace; font-size: 0.75rem; }
-        .mt-1        { margin-top: 8px; }
-        .mt-2        { margin-top: 16px; }
-        .mt-3        { margin-top: 24px; }
-        .mb-1        { margin-bottom: 8px; }
-        .mb-2        { margin-bottom: 16px; }
+        .text-muted { color: var(--dim); }
+        .text-amber { color: var(--amber); }
+        .text-green { color: var(--green); }
+        .text-red   { color: var(--red); }
+        .text-sm    { font-size: 0.82rem; }
+        .mono       { font-family: 'Space Mono', monospace; font-size: 0.75rem; }
+        .mt-1 { margin-top: 8px; }
+        .mt-2 { margin-top: 16px; }
+        .mt-3 { margin-top: 24px; }
+        .mb-1 { margin-bottom: 8px; }
+        .mb-2 { margin-bottom: 16px; }
 
         /* ── RESPONSIVE ── */
         @media (max-width: 768px) {
-            .nav-inner  { padding: 0 14px; }
+            .nav-links       { display: none; }   /* hide desktop links */
+            .nav-hamburger   { display: flex; }   /* show hamburger */
+            .nav-drawer      { display: flex; }   /* enable drawer (visibility via .is-open) */
+            .nav-overlay     { display: block; }
+            /* hide desktop logout/cta — they live in the drawer on mobile */
+            .nav-right .nav-cta   { display: none; }
+            .nav-right .btn-ghost { display: none; }
             .container  { padding: 20px 14px; }
             h1          { font-size: 1.5rem; }
             .tournament-grid, .org-grid { grid-template-columns: 1fr; }
@@ -811,6 +846,11 @@
             table       { min-width: 420px; }
             .page-header { flex-direction: column; gap: 12px; }
         }
+
+        @media (min-width: 769px) {
+            .nav-drawer  { display: none !important; }
+            .nav-overlay { display: none !important; }
+        }
     </style>
     {% block extra_head %}{% endblock %}
 </head>
@@ -818,13 +858,17 @@
     <nav>
         <div class="nav-inner">
             <a href="{% url 'dashboard' %}" class="nav-brand">NEX<span>US</span></a>
+
+            <!-- Desktop nav links -->
             <div class="nav-links">
                 <a href="{% url 'dashboard' %}">Dashboard</a>
                 <a href="{% url 'tournament_list' %}">Tournaments</a>
                 <a href="{% url 'organization_list' %}">Organizations</a>
                 <a href="{% url 'team_list' %}">Registrations</a>
             </div>
-            <div style="display:flex; align-items:center; gap:10px; flex-shrink:0;">
+
+            <!-- Desktop right actions -->
+            <div class="nav-right">
                 <a href="{% url 'tournament_create' %}" class="nav-cta">+ New Tournament</a>
                 {% if user.is_authenticated %}
                 <form method="post" action="{% url 'logout' %}" style="margin:0;">
@@ -833,14 +877,41 @@
                 </form>
                 {% endif %}
             </div>
+
+            <!-- Hamburger (mobile only) -->
+            <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu" aria-expanded="false" aria-controls="nav-drawer">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
         </div>
     </nav>
 
-    <!-- Toast container — lives outside .container so it's always fixed to the viewport -->
+    <!-- Mobile drawer -->
+    <div class="nav-drawer" id="nav-drawer" role="dialog" aria-label="Navigation menu">
+        <a href="{% url 'dashboard' %}">Dashboard</a>
+        <a href="{% url 'tournament_list' %}">Tournaments</a>
+        <a href="{% url 'organization_list' %}">Organizations</a>
+        <a href="{% url 'team_list' %}">Registrations</a>
+        <div class="nav-drawer-divider"></div>
+        <a href="{% url 'tournament_create' %}" class="nav-cta">+ New Tournament</a>
+        {% if user.is_authenticated %}
+        <div class="nav-drawer-logout">
+            <form method="post" action="{% url 'logout' %}" style="margin:0;">
+                {% csrf_token %}
+                <button type="submit">Logout</button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Overlay to close drawer on outside tap -->
+    <div class="nav-overlay" id="nav-overlay" aria-hidden="true"></div>
+
+    <!-- Toast container -->
     <div id="toast-container" aria-live="polite" aria-atomic="false"></div>
 
-    <!-- Seed Django messages as JSON for the toast JS to consume -->
-    {%  if messages %}
+    {% if messages %}
     <script id="django-messages" type="application/json">
     [{% for message in messages %}{"level":"{{ message.level_tag|escapejs }}","text":"{{ message.message|escapejs }}"}{% if not forloop.last %},{% endif %}{% endfor %}]
     </script>
@@ -851,8 +922,50 @@
     </div>
 
     <script>
+    /* ── Hamburger nav ── */
     (function () {
-        const ICONS = { success: '\u2713', error: '\u2715', warning: '\u26a0', info: '\u2139' };
+        const btn     = document.getElementById('nav-hamburger');
+        const drawer  = document.getElementById('nav-drawer');
+        const overlay = document.getElementById('nav-overlay');
+
+        function open() {
+            btn.classList.add('is-open');
+            drawer.classList.add('is-open');
+            overlay.classList.add('is-open');
+            btn.setAttribute('aria-expanded', 'true');
+            btn.setAttribute('aria-label', 'Close menu');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function close() {
+            btn.classList.remove('is-open');
+            drawer.classList.remove('is-open');
+            overlay.classList.remove('is-open');
+            btn.setAttribute('aria-expanded', 'false');
+            btn.setAttribute('aria-label', 'Open menu');
+            document.body.style.overflow = '';
+        }
+
+        btn.addEventListener('click', () =>
+            btn.classList.contains('is-open') ? close() : open()
+        );
+
+        overlay.addEventListener('click', close);
+
+        /* Close on nav link tap */
+        drawer.querySelectorAll('a').forEach(a =>
+            a.addEventListener('click', close)
+        );
+
+        /* Close on Escape */
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape' && btn.classList.contains('is-open')) close();
+        });
+    })();
+
+    /* ── Toast notifications ── */
+    (function () {
+        const ICONS    = { success: '\u2713', error: '\u2715', warning: '\u26a0', info: '\u2139' };
         const DURATION = 4000;
 
         function showToast(level, text) {
@@ -866,8 +979,6 @@
                 '<div class="toast-progress"></div>';
 
             document.getElementById('toast-container').appendChild(el);
-
-            // Trigger slide-in on next frame
             requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('show')));
 
             function dismiss() {
@@ -879,17 +990,13 @@
             setTimeout(dismiss, DURATION);
         }
 
-        // Read seeded Django messages
         var seed = document.getElementById('django-messages');
         if (seed) {
             try {
-                JSON.parse(seed.textContent).forEach(function (m) {
-                    showToast(m.level, m.text);
-                });
+                JSON.parse(seed.textContent).forEach(m => showToast(m.level, m.text));
             } catch (e) {}
         }
 
-        // Expose globally so other scripts can trigger toasts: Toasts.show('success', 'Done!')
         window.Toasts = { show: showToast };
     })();
     </script>
