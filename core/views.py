@@ -4,10 +4,12 @@ from organizations.models import Organization
 from tournaments.models import Tournament
 from registrations.models import Registration
 
+
 def home(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
     return redirect('login')
+
 
 @login_required
 def dashboard(request):
@@ -15,7 +17,7 @@ def dashboard(request):
     tournaments = Tournament.objects.filter(organization__owner=request.user)
     registrations = Registration.objects.filter(tournament__organization__owner=request.user)
 
-    # Plan info
+    # Plan info — guarded safely in case billing/subscription not yet set up
     org = organizations.first()
     plan_name = None
     tournament_limit = None
@@ -30,6 +32,7 @@ def dashboard(request):
             tournaments_used = tournaments.count()
             slots_remaining = max(0, tournament_limit - tournaments_used)
         except Exception:
+            # billing not configured yet — silently skip plan info
             pass
 
     context = {
