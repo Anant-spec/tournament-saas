@@ -14,7 +14,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY
 SECRET_KEY = config("SECRET_KEY")
 DEBUG = config("DEBUG", default=False, cast=bool)
-ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="127.0.0.1,localhost", cast=Csv(), [".up.railway.app"])
+ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="127.0.0.1,localhost,.up.railway.app", cast=Csv())
 
 # Application definition
 INSTALLED_APPS = [
