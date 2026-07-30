@@ -14,7 +14,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY
 SECRET_KEY = config("SECRET_KEY")
 DEBUG = config("DEBUG", default=False, cast=bool)
-ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="127.0.0.1,localhost", cast=Csv())
+ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="127.0.0.1,localhost,.up.railway.app", cast=Csv())
 
 # Application definition
 INSTALLED_APPS = [
@@ -115,3 +115,9 @@ SPECTACULAR_SETTINGS = {
     'DESCRIPTION': 'Multi-tenant tournament management platform',
     'VERSION': '1.0.0',
 }
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://tournament-status.up.railway.app",
+]
+
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
