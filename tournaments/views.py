@@ -360,10 +360,11 @@ def generate_bracket(request, pk):
 @require_POST
 @transaction.atomic
 def report_match_result(request, match_id):
+    # Fetch match WITHOUT select_for_update + select_related combined —
+    # mixing these on a self-referential FK causes a lock conflict on PostgreSQL.
+    # We lock individual rows explicitly below only when we need to write.
     match = get_object_or_404(
-        Match.objects.select_for_update().select_related(
-            "tournament", "next_match", "team1", "team2"
-        ),
+        Match.objects.select_related("tournament", "team1", "team2"),
         pk=match_id,
         tournament__organization__owner=request.user,
     )
@@ -385,14 +386,18 @@ def report_match_result(request, match_id):
         messages.error(request, "Invalid winner selected.")
         return redirect("tournament_detail", pk=tournament.id)
 
+    # Lock and save this match
+    Match.objects.filter(pk=match.pk).select_for_update().update(
+        winner=winner, status="completed"
+    )
     match.winner = winner
     match.status = "completed"
-    match.save(update_fields=["winner", "status"])
 
-    if match.next_match:
-        # Guard against stale next_match FK pointing to a deleted match (e.g. after bracket reset)
+    # Handle next match progression
+    next_match_id = match.next_match_id
+    if next_match_id:
         try:
-            next_match = Match.objects.select_for_update().get(pk=match.next_match.pk)
+            next_match = Match.objects.select_for_update().get(pk=next_match_id)
         except Match.DoesNotExist:
             messages.error(
                 request,
@@ -426,7 +431,7 @@ def report_match_result(request, match_id):
         .order_by("-round_number", "-match_number")
         .first()
     )
-    if final_match and final_match.winner:
+    if final_match and final_match.winner_id:
         tournament.status = "completed"
         tournament.champion = final_match.winner
         tournament.save(update_fields=["status", "champion"])
