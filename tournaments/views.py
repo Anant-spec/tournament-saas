@@ -390,7 +390,16 @@ def report_match_result(request, match_id):
     match.save(update_fields=["winner", "status"])
 
     if match.next_match:
-        next_match = Match.objects.select_for_update().get(pk=match.next_match.pk)
+        # Guard against stale next_match FK pointing to a deleted match (e.g. after bracket reset)
+        try:
+            next_match = Match.objects.select_for_update().get(pk=match.next_match.pk)
+        except Match.DoesNotExist:
+            messages.error(
+                request,
+                "The bracket structure is inconsistent. Please reset and regenerate the bracket."
+            )
+            return redirect("tournament_detail", pk=tournament.id)
+
         if next_match.team1 is None:
             next_match.team1 = winner
             next_match.save(update_fields=["team1"])
@@ -410,8 +419,9 @@ def report_match_result(request, match_id):
         tournament.champion = winner
         tournament.save(update_fields=["status", "champion"])
 
+    # Final match check — ensure champion is always set correctly
     final_match = (
-        Match.objects.select_for_update()
+        Match.objects
         .filter(tournament=tournament)
         .order_by("-round_number", "-match_number")
         .first()
