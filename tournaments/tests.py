@@ -9,8 +9,8 @@ from .models import Tournament, Match
 User = get_user_model()
 
 
-def create_user(username="testuser", password="pass1234"):
-    return User.objects.create_user(username=username, password=password)
+def create_user(email="test@example.com", password="pass1234"):
+    return User.objects.create_user(email=email, password=password)
 
 
 def create_org(owner):
@@ -45,7 +45,7 @@ class BracketGenerationTests(TestCase):
         self.user = create_user()
         self.org = create_org(self.user)
         self.client = Client()
-        self.client.login(username="testuser", password="pass1234")
+        self.client.login(username="test@example.com", password="pass1234")
 
     def _generate(self, tournament):
         url = reverse("generate_bracket", kwargs={"pk": tournament.pk})
@@ -122,7 +122,7 @@ class MatchReportTests(TestCase):
         self.user = create_user()
         self.org = create_org(self.user)
         self.client = Client()
-        self.client.login(username="testuser", password="pass1234")
+        self.client.login(username="test@example.com", password="pass1234")
 
     def _generate(self, tournament):
         url = reverse("generate_bracket", kwargs={"pk": tournament.pk})
