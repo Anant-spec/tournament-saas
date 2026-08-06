@@ -8,7 +8,7 @@ from registrations.models import Registration
 def home(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
-    return redirect('login')
+    return render(request, 'core/home.html')
 
 
 @login_required

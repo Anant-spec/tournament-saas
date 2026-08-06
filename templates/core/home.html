@@ -1,13 +1,1114 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Tournament SaaS</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus — Tournament Management Platform</title>
+    <meta name="description" content="Run professional esports and sports tournaments. Brackets, registrations, and results — all in one place.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=DM+Sans:wght@300;400;500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink: #0b0d10;
+            --steel: #111520;
+            --plate: #171c27;
+            --panel: #1e2535;
+            --rim: #2a3248;
+            --ghost: #3a4560;
+            --dim: #6b7a99;
+            --pale: #9aaac4;
+            --wire: #c5cfe0;
+            --white: #f0f4ff;
+            --amber: #f59e0b;
+            --amber-hot: #fbbf24;
+            --amber-dim: #92650a;
+            --amber-bg: rgba(245,158,11,0.08);
+            --cyan: #22d3ee;
+            --green: #10b981;
+            --green-bg: rgba(16,185,129,0.08);
+            --red: #ef4444;
+            --blue: #3b82f6;
+            --radius-sm: 6px;
+            --radius: 10px;
+            --radius-lg: 14px;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: #0f1117;
+            color: var(--wire);
+            min-height: 100vh;
+            font-size: 16px;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* NAV */
+        nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 100;
+            background: rgba(17,21,32,0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(42,50,72,0.6);
+        }
+
+        .nav-inner {
+            max-width: 1140px;
+            margin: 0 auto;
+            padding: 0 24px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .nav-brand {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            color: var(--amber);
+            text-decoration: none;
+            text-transform: uppercase;
+        }
+        .nav-brand span { color: var(--pale); }
+
+        .nav-actions { display: flex; align-items: center; gap: 10px; }
+
+        .nav-link {
+            color: var(--dim);
+            text-decoration: none;
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 600;
+            font-size: 0.82rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            transition: color 0.15s, background 0.15s;
+        }
+        .nav-link:hover { color: var(--wire); background: var(--panel); }
+
+        .nav-cta {
+            background: var(--amber);
+            color: var(--ink);
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700;
+            font-size: 0.8rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 8px 18px;
+            border-radius: var(--radius-sm);
+            text-decoration: none;
+            transition: background 0.15s;
+            min-height: 38px;
+            display: inline-flex;
+            align-items: center;
+        }
+        .nav-cta:hover { background: var(--amber-hot); color: var(--ink); }
+
+        /* SECTIONS */
+        section { position: relative; }
+
+        .container {
+            max-width: 1140px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* HERO */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 120px 0 80px;
+            overflow: hidden;
+            background: #0f1117;
+        }
+
+        .hero-bg {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .hero-bg::before {
+            content: '';
+            position: absolute;
+            top: -20%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 900px;
+            height: 600px;
+            background: radial-gradient(ellipse at center, rgba(245,158,11,0.07) 0%, transparent 70%);
+        }
+
+        .hero-bg::after {
+            content: '';
+            position: absolute;
+            top: 10%;
+            right: -10%;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(ellipse at center, rgba(34,211,238,0.04) 0%, transparent 65%);
+        }
+
+        /* Scanline texture */
+        .hero-bg-lines {
+            position: absolute;
+            inset: 0;
+            background-image: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 3px,
+                rgba(255,255,255,0.008) 3px,
+                rgba(255,255,255,0.008) 4px
+            );
+        }
+
+        .hero-inner {
+            position: relative;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 64px;
+            align-items: center;
+        }
+
+        .hero-eyebrow {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.62rem;
+            color: var(--amber);
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .hero-eyebrow::before { content: ''; width: 20px; height: 1px; background: var(--amber); }
+
+        .hero-title {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: clamp(2.4rem, 5vw, 4rem);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            color: var(--white);
+            line-height: 1.05;
+            margin-bottom: 20px;
+        }
+
+        .hero-title em {
+            font-style: normal;
+            color: var(--amber);
+        }
+
+        .hero-body {
+            color: var(--pale);
+            font-size: 1.05rem;
+            line-height: 1.7;
+            max-width: 48ch;
+            margin-bottom: 36px;
+        }
+
+        .hero-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+
+        .btn-hero {
+            background: var(--amber);
+            color: var(--ink);
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700;
+            font-size: 0.88rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 13px 28px;
+            border-radius: var(--radius);
+            text-decoration: none;
+            transition: background 0.15s, transform 0.15s;
+            min-height: 48px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-hero:hover { background: var(--amber-hot); transform: translateY(-1px); color: var(--ink); }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--pale);
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 600;
+            font-size: 0.85rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            padding: 13px 24px;
+            border-radius: var(--radius);
+            border: 1px solid var(--rim);
+            text-decoration: none;
+            transition: color 0.15s, border-color 0.15s;
+            min-height: 48px;
+            display: inline-flex;
+            align-items: center;
+        }
+        .btn-outline:hover { color: var(--wire); border-color: var(--ghost); }
+
+        /* Hero visual — bracket preview */
+        .hero-visual {
+            position: relative;
+        }
+
+        .bracket-preview {
+            background: var(--plate);
+            border: 1px solid var(--rim);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        .bp-header {
+            font-size: 0.6rem;
+            font-family: 'Space Mono', monospace;
+            color: var(--amber);
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .bp-header::before { content: ''; width: 14px; height: 1px; background: var(--amber); }
+
+        .bp-rounds { display: flex; gap: 16px; overflow: hidden; }
+        .bp-round { flex: 1; }
+        .bp-round-label {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.55rem;
+            color: var(--dim);
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .bp-match { margin-bottom: 12px; }
+
+        .bp-team {
+            background: var(--panel);
+            border: 1px solid var(--rim);
+            border-radius: var(--radius-sm);
+            padding: 7px 10px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--wire);
+            margin-bottom: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: border-color 0.15s;
+        }
+        .bp-team.winner {
+            border-color: rgba(16,185,129,0.4);
+            color: #34d399;
+            background: rgba(16,185,129,0.06);
+        }
+        .bp-team.winner .bp-score { color: #34d399; }
+        .bp-score {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--dim);
+        }
+
+        .bp-connector {
+            width: 100%;
+            height: 1px;
+            background: var(--rim);
+            margin: 6px 0 10px;
+        }
+
+        /* Glow accent on bracket */
+        .hero-visual::before {
+            content: '';
+            position: absolute;
+            bottom: -30px;
+            right: -30px;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(245,158,11,0.1) 0%, transparent 65%);
+            pointer-events: none;
+        }
+
+        /* STATS BAR */
+        .stats-bar {
+            background: var(--steel);
+            border-top: 1px solid var(--rim);
+            border-bottom: 1px solid var(--rim);
+            padding: 32px 0;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 0 24px;
+            border-right: 1px solid var(--rim);
+        }
+        .stat-item:last-child { border-right: none; }
+
+        .stat-number {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--amber);
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.58rem;
+            color: var(--dim);
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        /* FEATURES */
+        .features {
+            padding: 96px 0;
+            background: #0f1117;
+        }
+
+        .section-eyebrow {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.6rem;
+            color: var(--amber);
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .section-eyebrow::before { content: ''; width: 16px; height: 1px; background: var(--amber); }
+
+        .section-title {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: clamp(1.8rem, 3vw, 2.6rem);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            color: var(--white);
+            line-height: 1.1;
+            margin-bottom: 12px;
+        }
+
+        .section-sub {
+            color: var(--pale);
+            font-size: 1rem;
+            max-width: 52ch;
+            line-height: 1.65;
+            margin-bottom: 56px;
+        }
+
+        /* Feature grid — asymmetric 2+1 layout */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto auto;
+            gap: 16px;
+        }
+
+        .feature-card {
+            background: var(--plate);
+            border: 1px solid var(--rim);
+            border-radius: var(--radius-lg);
+            padding: 28px 28px 32px;
+            position: relative;
+            overflow: hidden;
+            transition: border-color 0.2s;
+        }
+        .feature-card:hover { border-color: var(--ghost); }
+
+        .feature-card.featured {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+            align-items: center;
+            padding: 36px 36px;
+            border-color: rgba(245,158,11,0.15);
+        }
+        .feature-card.featured::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--amber), transparent);
+        }
+
+        .feature-icon {
+            width: 40px;
+            height: 40px;
+            margin-bottom: 18px;
+            color: var(--amber);
+        }
+
+        .feature-title {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.15rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--white);
+            margin-bottom: 8px;
+        }
+
+        .feature-desc {
+            color: var(--dim);
+            font-size: 0.9rem;
+            line-height: 1.65;
+            max-width: 40ch;
+        }
+
+        /* Feature bracket mini visual inside featured card */
+        .feature-visual {
+            background: var(--panel);
+            border: 1px solid var(--rim);
+            border-radius: var(--radius);
+            padding: 16px;
+        }
+
+        .fv-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .fv-row:last-child { margin-bottom: 0; }
+
+        .fv-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .fv-dot.green  { background: var(--green); }
+        .fv-dot.amber  { background: var(--amber); }
+        .fv-dot.blue   { background: var(--blue); }
+        .fv-dot.dim    { background: var(--ghost); }
+
+        .fv-bar {
+            flex: 1;
+            height: 28px;
+            border-radius: var(--radius-sm);
+            background: var(--plate);
+            border: 1px solid var(--rim);
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--pale);
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        .fv-bar.active { border-color: rgba(245,158,11,0.35); color: var(--amber); background: var(--amber-bg); }
+
+        .fv-score {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.68rem;
+            color: var(--dim);
+            flex-shrink: 0;
+            min-width: 32px;
+            text-align: right;
+        }
+        .fv-score.winner { color: var(--green); }
+
+        /* PRICING */
+        .pricing {
+            padding: 96px 0;
+            background: var(--steel);
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            align-items: start;
+        }
+
+        .plan-card {
+            background: var(--plate);
+            border: 1px solid var(--rim);
+            border-radius: var(--radius-lg);
+            padding: 28px;
+            position: relative;
+            transition: border-color 0.2s, transform 0.2s;
+        }
+        .plan-card:hover { border-color: var(--ghost); }
+
+        .plan-card.popular {
+            border-color: rgba(245,158,11,0.3);
+            transform: translateY(-6px);
+        }
+        .plan-card.popular:hover { transform: translateY(-8px); }
+
+        .plan-popular-badge {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--amber);
+            color: var(--ink);
+            font-family: 'Space Mono', monospace;
+            font-size: 0.55rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            padding: 4px 12px;
+            border-radius: 999px;
+        }
+
+        .plan-name {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--pale);
+            margin-bottom: 12px;
+        }
+
+        .plan-price {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 2.6rem;
+            font-weight: 700;
+            color: var(--white);
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+        .plan-price span {
+            font-size: 1rem;
+            color: var(--dim);
+            font-weight: 500;
+        }
+
+        .plan-period {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.6rem;
+            color: var(--dim);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-bottom: 24px;
+        }
+
+        .plan-divider { height: 1px; background: var(--rim); margin-bottom: 20px; }
+
+        .plan-features { list-style: none; margin-bottom: 28px; }
+        .plan-features li {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: 0.88rem;
+            color: var(--pale);
+            padding: 5px 0;
+        }
+        .plan-features li::before {
+            content: '✓';
+            color: var(--green);
+            font-size: 0.75rem;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        .plan-features li.dimmed { color: var(--ghost); }
+        .plan-features li.dimmed::before { content: '—'; color: var(--ghost); }
+
+        .plan-cta {
+            display: block;
+            text-align: center;
+            width: 100%;
+            min-height: 44px;
+            padding: 11px 20px;
+            border-radius: var(--radius);
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700;
+            font-size: 0.85rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            text-decoration: none;
+            transition: all 0.15s;
+            border: 1px solid transparent;
+        }
+
+        .plan-cta.primary { background: var(--amber); color: var(--ink); border-color: var(--amber); }
+        .plan-cta.primary:hover { background: var(--amber-hot); }
+        .plan-cta.secondary { background: transparent; color: var(--pale); border-color: var(--rim); }
+        .plan-cta.secondary:hover { color: var(--wire); border-color: var(--ghost); }
+
+        /* HOW IT WORKS */
+        .how {
+            padding: 96px 0;
+            background: #0f1117;
+        }
+
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            position: relative;
+        }
+
+        .steps::before {
+            content: '';
+            position: absolute;
+            top: 22px;
+            left: calc(12.5% + 8px);
+            right: calc(12.5% + 8px);
+            height: 1px;
+            background: linear-gradient(90deg, var(--amber) 0%, var(--rim) 100%);
+            z-index: 0;
+        }
+
+        .step {
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .step-num {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--plate);
+            border: 1px solid var(--amber);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--amber);
+        }
+
+        .step-title {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--wire);
+            margin-bottom: 6px;
+        }
+
+        .step-desc {
+            font-size: 0.82rem;
+            color: var(--dim);
+            line-height: 1.6;
+        }
+
+        /* CTA BANNER */
+        .cta-banner {
+            padding: 80px 0;
+            background: var(--steel);
+            border-top: 1px solid var(--rim);
+        }
+
+        .cta-inner {
+            text-align: center;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .cta-title {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            color: var(--white);
+            line-height: 1.1;
+            margin-bottom: 14px;
+        }
+        .cta-title em { font-style: normal; color: var(--amber); }
+
+        .cta-sub {
+            color: var(--pale);
+            font-size: 0.95rem;
+            line-height: 1.65;
+            margin-bottom: 32px;
+        }
+
+        /* FOOTER */
+        footer {
+            background: var(--ink);
+            border-top: 1px solid var(--rim);
+            padding: 40px 24px;
+        }
+
+        .footer-inner {
+            max-width: 1140px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .footer-brand {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            color: var(--amber);
+            text-transform: uppercase;
+        }
+        .footer-brand span { color: var(--pale); }
+
+        .footer-copy {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.6rem;
+            color: var(--dim);
+            letter-spacing: 0.08em;
+        }
+
+        .footer-links { display: flex; gap: 20px; }
+        .footer-links a {
+            font-size: 0.82rem;
+            color: var(--dim);
+            text-decoration: none;
+            transition: color 0.15s;
+        }
+        .footer-links a:hover { color: var(--pale); }
+
+        /* MOBILE */
+        @media (max-width: 900px) {
+            .hero-inner { grid-template-columns: 1fr; gap: 40px; }
+            .hero-visual { display: none; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .stat-item { border-right: none; border-bottom: 1px solid var(--rim); padding: 16px 0; }
+            .stat-item:nth-child(odd) { border-right: 1px solid var(--rim); }
+            .stat-item:last-child { border-bottom: none; }
+            .stat-item:nth-last-child(2) { border-bottom: none; }
+            .feature-grid { grid-template-columns: 1fr; }
+            .feature-card.featured { grid-column: auto; grid-template-columns: 1fr; gap: 20px; }
+            .pricing-grid { grid-template-columns: 1fr; }
+            .plan-card.popular { transform: none; }
+            .steps { grid-template-columns: repeat(2, 1fr); }
+            .steps::before { display: none; }
+        }
+
+        @media (max-width: 600px) {
+            .hero { padding: 100px 0 60px; }
+            .hero-actions { flex-direction: column; align-items: flex-start; }
+            .btn-hero, .btn-outline { width: 100%; justify-content: center; }
+            .steps { grid-template-columns: 1fr; }
+            .footer-inner { flex-direction: column; align-items: flex-start; gap: 12px; }
+            .footer-links { flex-wrap: wrap; gap: 12px; }
+        }
+    </style>
 </head>
 <body>
-    <h1>Welcome to Tournament SaaS</h1>
-    <p>This platform helps organizers create and manage esports tournaments.</p>
 
-    <a href="/admin/">Admin Panel</a>
-    <a href="/dashboard/">Dashboard</a>
+<!-- NAV -->
+<nav>
+    <div class="nav-inner">
+        <a href="/" class="nav-brand">NEX<span>US</span></a>
+        <div class="nav-actions">
+            <a href="#pricing" class="nav-link">Pricing</a>
+            <a href="{% url 'login' %}" class="nav-link">Login</a>
+            <a href="{% url 'register' %}" class="nav-cta">Get Started</a>
+        </div>
+    </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+    <div class="hero-bg">
+        <div class="hero-bg-lines"></div>
+    </div>
+    <div class="container">
+        <div class="hero-inner">
+            <div class="hero-content">
+                <div class="hero-eyebrow">Tournament Management Platform</div>
+                <h1 class="hero-title">
+                    Run <em>Pro</em><br>Tournaments.<br>Without the hassle.
+                </h1>
+                <p class="hero-body">
+                    Create brackets, manage registrations, track scores, and publish results — all in one place. Built for organizers who mean business.
+                </p>
+                <div class="hero-actions">
+                    <a href="{% url 'register' %}" class="btn-hero">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 3l14 9-14 9V3z"/></svg>
+                        Start for free
+                    </a>
+                    <a href="#how" class="btn-outline">See how it works</a>
+                </div>
+            </div>
+
+            <!-- Bracket preview card -->
+            <div class="hero-visual">
+                <div class="bracket-preview">
+                    <div class="bp-header">Live Bracket — Grand Final</div>
+                    <div class="bp-rounds">
+                        <div class="bp-round">
+                            <div class="bp-round-label">Semifinal</div>
+                            <div class="bp-match">
+                                <div class="bp-team winner">PHANTOM <span class="bp-score winner">2</span></div>
+                                <div class="bp-team">NOVA <span class="bp-score">1</span></div>
+                            </div>
+                            <div class="bp-connector"></div>
+                            <div class="bp-match">
+                                <div class="bp-team winner">AXIOM <span class="bp-score winner">2</span></div>
+                                <div class="bp-team">FORGE <span class="bp-score">0</span></div>
+                            </div>
+                        </div>
+                        <div class="bp-round">
+                            <div class="bp-round-label">Final</div>
+                            <div class="bp-match" style="margin-top: 44px;">
+                                <div class="bp-team winner">PHANTOM <span class="bp-score winner">3</span></div>
+                                <div class="bp-team">AXIOM <span class="bp-score">1</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- STATS BAR -->
+<div class="stats-bar">
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-number">500+</div>
+                <div class="stat-label">Tournaments hosted</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">12k+</div>
+                <div class="stat-label">Teams registered</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">98%</div>
+                <div class="stat-label">Uptime SLA</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">4.9★</div>
+                <div class="stat-label">Avg organizer rating</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+    <div class="container">
+        <div class="section-eyebrow">Everything you need</div>
+        <h2 class="section-title">Built for serious organizers</h2>
+        <p class="section-sub">From grassroots community events to professional circuits — Nexus scales with your ambitions.</p>
+
+        <div class="feature-grid">
+
+            <!-- Featured: Bracket Engine -->
+            <div class="feature-card featured">
+                <div>
+                    <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <rect x="3" y="3" width="7" height="5" rx="1"/>
+                        <rect x="14" y="3" width="7" height="5" rx="1"/>
+                        <rect x="8.5" y="16" width="7" height="5" rx="1"/>
+                        <path d="M6.5 8v4h11V8M12 12v4"/>
+                    </svg>
+                    <div class="feature-title">Auto Bracket Engine</div>
+                    <p class="feature-desc">Single elimination, double elimination, round robin — seeding and fixtures generated automatically. Update scores and the bracket updates in real time.</p>
+                </div>
+                <div class="feature-visual">
+                    <div class="fv-row">
+                        <div class="fv-dot green"></div>
+                        <div class="fv-bar active">PHANTOM</div>
+                        <div class="fv-score winner">W</div>
+                    </div>
+                    <div class="fv-row">
+                        <div class="fv-dot dim"></div>
+                        <div class="fv-bar">NOVA</div>
+                        <div class="fv-score">—</div>
+                    </div>
+                    <div style="height:10px;"></div>
+                    <div class="fv-row">
+                        <div class="fv-dot green"></div>
+                        <div class="fv-bar active">AXIOM</div>
+                        <div class="fv-score winner">W</div>
+                    </div>
+                    <div class="fv-row">
+                        <div class="fv-dot dim"></div>
+                        <div class="fv-bar">FORGE</div>
+                        <div class="fv-score">—</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Team Registrations -->
+            <div class="feature-card">
+                <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                <div class="feature-title">Team Registrations</div>
+                <p class="feature-desc">Public registration links, roster management, and approval workflows. Accept or reject teams with one click.</p>
+            </div>
+
+            <!-- Results & Standings -->
+            <div class="feature-card">
+                <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M18 20V10M12 20V4M6 20v-6"/>
+                </svg>
+                <div class="feature-title">Live Results</div>
+                <p class="feature-desc">Real-time standings and match results. Share a public URL with participants and spectators — no login required.</p>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="how">
+    <div class="container">
+        <div class="section-eyebrow">Simple workflow</div>
+        <h2 class="section-title">Tournament live in minutes</h2>
+        <p class="section-sub" style="margin-bottom:48px;">No training sessions. No manuals. Just set it up and run.</p>
+
+        <div class="steps">
+            <div class="step">
+                <div class="step-num">01</div>
+                <div class="step-title">Create your org</div>
+                <p class="step-desc">Register and set up your organisation in under 2 minutes.</p>
+            </div>
+            <div class="step">
+                <div class="step-num">02</div>
+                <div class="step-title">Create a tournament</div>
+                <p class="step-desc">Name it, set the format, entry rules, and publish a registration link.</p>
+            </div>
+            <div class="step">
+                <div class="step-num">03</div>
+                <div class="step-title">Accept teams</div>
+                <p class="step-desc">Review registrations and approve rosters. Bracket auto-generates.</p>
+            </div>
+            <div class="step">
+                <div class="step-num">04</div>
+                <div class="step-title">Run & publish</div>
+                <p class="step-desc">Enter scores, track progress, and share live results with your community.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing" id="pricing">
+    <div class="container">
+        <div class="section-eyebrow">Pricing</div>
+        <h2 class="section-title">Start free. Scale when ready.</h2>
+        <p class="section-sub" style="margin-bottom:48px;">No credit card required for the free plan.</p>
+
+        <div class="pricing-grid">
+            <!-- Free -->
+            <div class="plan-card">
+                <div class="plan-name">Free</div>
+                <div class="plan-price">₹0</div>
+                <div class="plan-period">Forever free</div>
+                <div class="plan-divider"></div>
+                <ul class="plan-features">
+                    <li>Up to 3 tournaments</li>
+                    <li>Up to 16 teams per tournament</li>
+                    <li>Bracket & registration tools</li>
+                    <li>Public results page</li>
+                    <li class="dimmed">Entry fee collection</li>
+                    <li class="dimmed">Prize pool management</li>
+                    <li class="dimmed">Custom branding</li>
+                </ul>
+                <a href="{% url 'register' %}" class="plan-cta secondary">Get started free</a>
+            </div>
+
+            <!-- Pro -->
+            <div class="plan-card popular">
+                <div class="plan-popular-badge">Most Popular</div>
+                <div class="plan-name">Pro</div>
+                <div class="plan-price">₹999 <span>/mo</span></div>
+                <div class="plan-period">Billed monthly</div>
+                <div class="plan-divider"></div>
+                <ul class="plan-features">
+                    <li>Up to 20 tournaments</li>
+                    <li>Up to 64 teams per tournament</li>
+                    <li>Bracket & registration tools</li>
+                    <li>Public results page</li>
+                    <li>Entry fee collection</li>
+                    <li>Prize pool management</li>
+                    <li class="dimmed">Custom branding</li>
+                </ul>
+                <a href="{% url 'register' %}" class="plan-cta primary">Start Pro</a>
+            </div>
+
+            <!-- Business -->
+            <div class="plan-card">
+                <div class="plan-name">Business</div>
+                <div class="plan-price">₹2,999 <span>/mo</span></div>
+                <div class="plan-period">Billed monthly</div>
+                <div class="plan-divider"></div>
+                <ul class="plan-features">
+                    <li>Unlimited tournaments</li>
+                    <li>Up to 256 teams per tournament</li>
+                    <li>Bracket & registration tools</li>
+                    <li>Public results page</li>
+                    <li>Entry fee collection</li>
+                    <li>Prize pool management</li>
+                    <li>Custom branding</li>
+                </ul>
+                <a href="{% url 'register' %}" class="plan-cta secondary">Start Business</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA BANNER -->
+<section class="cta-banner">
+    <div class="container">
+        <div class="cta-inner">
+            <h2 class="cta-title">Ready to run your <em>next</em> tournament?</h2>
+            <p class="cta-sub">Join organizers already using Nexus. Free to start, no credit card needed.</p>
+            <a href="{% url 'register' %}" class="btn-hero" style="display:inline-flex;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 3l14 9-14 9V3z"/></svg>
+                Create your free account
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+    <div class="footer-inner">
+        <div class="footer-brand">NEX<span>US</span></div>
+        <div class="footer-links">
+            <a href="#features">Features</a>
+            <a href="#pricing">Pricing</a>
+            <a href="{% url 'login' %}">Login</a>
+            <a href="{% url 'register' %}">Sign up</a>
+        </div>
+        <div class="footer-copy">© 2026 Nexus Tournament Platform</div>
+    </div>
+</footer>
+
 </body>
 </html>
