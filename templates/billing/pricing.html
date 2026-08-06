@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% block title %}Pricing{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width:860px; margin:var(--space-12) auto; padding-inline:var(--space-4)">
+  <h1 style="font-size:var(--text-xl); margin-bottom:var(--space-2)">Choose a Plan</h1>
+  <p style="color:var(--color-text-muted); margin-bottom:var(--space-10)">
+    Upgrade your organization to unlock more tournaments, larger rosters, and custom branding.
+  </p>
+
+  <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:var(--space-6)">
+    {% for plan in plans %}
+    <div class="card" style="
+      background:var(--color-surface);
+      border:1px solid var(--color-border);
+      border-radius:var(--radius-lg);
+      padding:var(--space-8);
+      display:flex; flex-direction:column; gap:var(--space-4);
+      {% if current_sub.plan == plan %}outline:2px solid var(--color-primary);{% endif %}
+    ">
+      <div>
+        <span style="font-size:var(--text-sm); font-weight:600; text-transform:uppercase;
+          letter-spacing:.06em; color:var(--color-text-muted)">
+          {{ plan.get_name_display }}
+        </span>
+        <div style="font-size:var(--text-xl); font-weight:700; margin-top:var(--space-2)">
+          {% if plan.price_monthly == 0 %}
+            Free
+          {% else %}
+            ₹{{ plan.price_monthly }}<span style="font-size:var(--text-sm); font-weight:400; color:var(--color-text-muted)">/mo</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <ul style="list-style:none; display:flex; flex-direction:column; gap:var(--space-2); font-size:var(--text-sm); color:var(--color-text-muted)">
+        <li>Up to {{ plan.tournament_limit }} tournament{{ plan.tournament_limit|pluralize }}</li>
+        <li>Up to {{ plan.team_limit_per_tournament }} teams per tournament</li>
+        {% if plan.can_set_entry_fee %}<li>✓ Entry fees</li>{% endif %}
+        {% if plan.can_set_prize_pool %}<li>✓ Prize pool</li>{% endif %}
+        {% if plan.custom_branding %}<li>✓ Custom branding</li>{% endif %}
+      </ul>
+
+      {% if current_sub.plan == plan %}
+        <button disabled style="
+          background:var(--color-surface-offset); color:var(--color-text-muted);
+          border:1px solid var(--color-border); border-radius:var(--radius-md);
+          padding:var(--space-3) var(--space-4); font-size:var(--text-sm); cursor:not-allowed;
+        ">Current plan</button>
+      {% elif plan.price_monthly == 0 %}
+        <span style="font-size:var(--text-sm); color:var(--color-text-muted); text-align:center">Default plan</span>
+      {% else %}
+        <button
+          class="btn-upgrade"
+          data-plan-id="{{ plan.id }}"
+          data-plan-name="{{ plan.get_name_display }}"
+          data-amount="{{ plan.price_monthly }}"
+          style="
+            background:var(--color-primary); color:#fff;
+            border:none; border-radius:var(--radius-md);
+            padding:var(--space-3) var(--space-4); font-size:var(--text-sm);
+            cursor:pointer; font-weight:500;
+            transition:background 180ms;
+          "
+        >Upgrade to {{ plan.get_name_display }}</button>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Razorpay checkout script -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+document.querySelectorAll('.btn-upgrade').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const planId = btn.dataset.planId;
+
+    // Step 1: create Razorpay order on server
+    const res = await fetch('{% url "billing:create_order" %}', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': '{{ csrf_token }}',
+      },
+      body: JSON.stringify({ plan_id: planId }),
+    });
+    const data = await res.json();
+    if (!res.ok) { alert(data.error || 'Could not create order'); return; }
+
+    // Step 2: open Razorpay checkout
+    const rzp = new Razorpay({
+      key: data.key_id,
+      amount: data.amount,
+      currency: data.currency,
+      order_id: data.order_id,
+      name: 'Tournament SaaS',
+      description: data.plan_name + ' Plan',
+      handler: async (response) => {
+        // Step 3: verify payment on server
+        const verifyRes = await fetch('{% url "billing:verify_payment" %}', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}',
+          },
+          body: JSON.stringify({
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature,
+            plan_id: planId,
+          }),
+        });
+        const verifyData = await verifyRes.json();
+        if (verifyRes.ok) {
+          alert('Upgraded to ' + verifyData.plan + ' successfully!');
+          window.location.reload();
+        } else {
+          alert('Payment verification failed: ' + (verifyData.error || 'unknown error'));
+        }
+      },
+      prefill: {
+        email: '{{ request.user.email }}',
+      },
+      theme: { color: '#01696f' },
+    });
+    rzp.open();
+  });
+});
+</script>
+{% endblock %}
