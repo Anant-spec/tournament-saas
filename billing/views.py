@@ -1,7 +1,6 @@
 import hmac
 import hashlib
 import json
-import razorpay
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
@@ -15,6 +14,12 @@ from .models import Plan, Subscription
 
 
 def _razorpay_client():
+    try:
+        import razorpay
+    except ImportError:
+        raise RuntimeError(
+            "razorpay package is not installed. Run: pip install razorpay==1.4.2"
+        )
     return razorpay.Client(
         auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET)
     )
@@ -24,7 +29,8 @@ def _razorpay_client():
 def pricing(request):
     """Plan selection page — shows all plans."""
     plans = Plan.objects.all().order_by("price_monthly")
-    current_sub = getattr(request.user.organization, "subscription", None)
+    org = getattr(request.user, "organization", None)
+    current_sub = getattr(org, "subscription", None) if org else None
     return render(request, "billing/pricing.html", {
         "plans": plans,
         "current_sub": current_sub,
@@ -50,7 +56,6 @@ def create_order(request):
     if plan.price_monthly == 0:
         return JsonResponse({"error": "Free plan does not require payment"}, status=400)
 
-    # Razorpay expects amount in paise (INR smallest unit)
     amount_paise = int(plan.price_monthly * 100)
 
     client = _razorpay_client()
@@ -91,7 +96,6 @@ def verify_payment(request):
     except (KeyError, json.JSONDecodeError):
         return JsonResponse({"error": "Missing required fields"}, status=400)
 
-    # Verify signature: HMAC-SHA256(order_id + "|" + payment_id, key_secret)
     expected = hmac.new(
         settings.RAZORPAY_KEY_SECRET.encode(),
         f"{order_id}|{payment_id}".encode(),
@@ -104,11 +108,9 @@ def verify_payment(request):
     plan = get_object_or_404(Plan, id=plan_id)
     org = request.user.organization
 
-    # Upsert subscription
     sub, _ = Subscription.objects.get_or_create(organization=org, defaults={"plan": plan})
     sub.plan = plan
     sub.status = "active"
-    sub.started_at = timezone.now()  # reset period
     sub.expires_at = timezone.now() + timedelta(days=30)
     sub.save()
 
@@ -118,11 +120,6 @@ def verify_payment(request):
 @csrf_exempt
 @require_POST
 def razorpay_webhook(request):
-    """
-    Razorpay webhook endpoint.
-    Handles payment.captured and subscription.charged events.
-    Set webhook secret in Razorpay dashboard and RAZORPAY_WEBHOOK_SECRET env var.
-    """
     webhook_secret = getattr(settings, "RAZORPAY_WEBHOOK_SECRET", None)
     if webhook_secret:
         received_sig = request.headers.get("X-Razorpay-Signature", "")
@@ -140,10 +137,7 @@ def razorpay_webhook(request):
         return HttpResponse(status=400)
 
     event = payload.get("event")
-
     if event == "payment.captured":
-        # Idempotent — payment already activated via verify_payment.
-        # Add any post-payment logic here (email, analytics, etc.)
-        pass
+        pass  # verify_payment already handles activation; add email/analytics here
 
     return HttpResponse(status=200)
