@@ -52,10 +52,16 @@ class BracketGenerationTests(TestCase):
         return self.client.post(url)
 
     def test_4_teams_creates_correct_match_count(self):
-        """4 teams → 2 Round 1 matches + 1 final = 3 matches total."""
+        """4 teams (power of 2, no byes) → 2 Round 1 matches + 1 final = 3 total."""
         t, _ = create_tournament(self.org, n_teams=4)
         self._generate(t)
         self.assertEqual(t.matches.count(), 3)
+
+    def test_8_teams_creates_correct_match_count(self):
+        """8 teams (power of 2, no byes) → 4 + 2 + 1 = 7 matches total."""
+        t, _ = create_tournament(self.org, n_teams=8)
+        self._generate(t)
+        self.assertEqual(t.matches.count(), 7)
 
     def test_2_teams_creates_one_match(self):
         """2 teams → 1 match, no byes."""
@@ -64,21 +70,19 @@ class BracketGenerationTests(TestCase):
         self.assertEqual(t.matches.count(), 1)
 
     def test_3_teams_creates_byes(self):
-        """3 teams → bracket_size=4, 1 bye. Round 1 has 1 match, Round 2 has 2 matches."""
+        """3 teams → bracket_size=4, 1 bye. Round 1: 1 match, Round 2: 1 match (final)."""
         t, _ = create_tournament(self.org, n_teams=3)
         self._generate(t)
         r1 = t.matches.filter(round_number=1).count()
         r2 = t.matches.filter(round_number=2).count()
         self.assertEqual(r1, 1)
-        self.assertEqual(r2, 2)
+        self.assertEqual(r2, 1)
 
-    def test_5_teams_bracket_size_is_8(self):
-        """5 teams → bracket_size=8, 3 byes."""
+    def test_5_teams_correct_match_count(self):
+        """5 teams → bracket_size=8, 3 byes. Only 4 matches actually created."""
         t, _ = create_tournament(self.org, n_teams=5)
         self._generate(t)
-        total = t.matches.count()
-        # Total matches = bracket_size - 1 = 7
-        self.assertEqual(total, 7)
+        self.assertEqual(t.matches.count(), 4)
 
     def test_next_match_wiring_is_complete(self):
         """All non-final matches must have a next_match pointer."""
@@ -107,7 +111,6 @@ class BracketGenerationTests(TestCase):
         t, _ = create_tournament(self.org, n_teams=4)
         self._generate(t)
         self._generate(t)  # second call
-        # Match count must not double
         self.assertEqual(t.matches.count(), 3)
 
     def test_less_than_2_teams_blocked(self):
@@ -165,7 +168,6 @@ class MatchReportTests(TestCase):
         self._generate(t)
         match = t.matches.first()
         self._report(match, match.team1)
-        # Report again — should redirect with error, not crash
         response = self._report(match, match.team2)
         self.assertEqual(response.status_code, 302)
         match.refresh_from_db()
