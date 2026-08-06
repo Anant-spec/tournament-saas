@@ -11,7 +11,7 @@ urlpatterns = [
     path("organizations/", include("organizations.urls")),
     path("tournaments/", include("tournaments.urls")),
     path("registrations/", include("registrations.urls")),
-    path("billing/", include("billing.urls", namespace="billing")),
+    path("billing/", include("billing.urls")),
     path("api/", include("tournaments.api_urls")),
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("api/docs/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
