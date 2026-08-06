@@ -62,11 +62,14 @@ def create_order(request):
 
     amount_paise = int(plan.price_monthly * 100)
 
+    # Razorpay receipt max 40 chars; UUID is 36 so use last 32 chars of plan id
+    receipt = f"p_{str(plan.id).replace('-', '')[:32]}"
+
     client = _razorpay_client()
     order = client.order.create({
         "amount": amount_paise,
         "currency": "INR",
-        "receipt": f"plan_{plan.id}",
+        "receipt": receipt,
         "notes": {
             "plan_name": plan.name,
             "user_id": str(request.user.id),
